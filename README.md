@@ -1,6 +1,6 @@
 # 🏙️ Liberty Sands
 
-A single-file, top-down open-world action game inspired by Grand Theft Auto (especially **GTA Advance** on the GBA). 6,500+ lines of vanilla HTML, CSS, and JavaScript packed into one `index.html` file — no build step, no dependencies, no server.
+A single-file, top-down open-world action game inspired by Grand Theft Auto (especially **GTA Advance** on the GBA). 7,600+ lines of vanilla HTML, CSS, and JavaScript packed into one `index.html` file — no build step, no dependencies, no server.
 
 ```
   Open index.html in any modern browser.
@@ -14,10 +14,17 @@ A single-file, top-down open-world action game inspired by Grand Theft Auto (esp
 
 - **Hand-designed city** — three islands (Portland, Staunton, Shoreside Vale) connected by bridges, modeled after Liberty City Advance
 - **10-mission story arc** with intro/outro narrative beats between missions, ramping environmental mood (clear → overcast → storm → dawn) as the story progresses
-- **5 playable characters** with distinct accent colors: Marcus, Rico, Nia, Volk, Echo
-- **Real interactive mechanics** beyond shooting: plant bombs (E), hack terminals (E), defend zones, drive chase vehicles, fly planes
+- **Real mission mechanics** — rescue an ally and escort them to extract (M1), stealth with alarm counter (M5), heist with cash-bag collection (M6), 3-phase boss with HP-triggered reinforcement waves (M10), plus bombs / hacks / defend zones / chase driving across the others
+- **Mission Fail state** — drop the contact in M1 or trip 3 alarms in M5 and the mission ends; retry from the pause menu
+- **5 playable characters** with distinct accent colors and passive bonuses: Marcus, Rico, Nia, Volk, Echo
+- **Character skills & trainer upgrades** — buy per-character upgrades (e.g. Echo's silencer, Marcus's rifle bonus) from in-world trainers
+- **Bounty Board side missions** — 5 contract types (hunt / steal / holdout / time trial / rampage), refresh on completion
+- **Properties / garages** — buy real-estate, store vehicles, claim daily income
+- **The Big Job** — post-story randomized 3-phase heist (collect → defend → escape to airport)
+- **Dynamic random events + rep system** — world events spawn while you free-roam; rep modifies offers
+- **Achievements & lifetime stats** tracked across runs
 - **Stores** — Burger Pit, Pharmacy, Ammu-Nation, Threads — each with their own catalogs
-- **Buyable weapons**: pistol, shotgun (spread shot), SMG, rifle, gatling, plus throwable grenades/smoke/molotov cocktails
+- **Buyable weapons**: pistol, shotgun (spread shot), SMG, rifle, gatling, RPG (explosive rockets with splash damage), plus throwable grenades / smoke / molotov cocktails
 - **Cheat-only superweapons**: laser cannon, Munroe Bomb (place anywhere, shoot to detonate, screen flashbangs)
 - **Military bases** with patrolling soldiers, fighter jets, and an automatic 5-star wanted level the moment you cross the fence
 - **Civilian airport** with flyable prop planes and a helicopter
@@ -26,6 +33,7 @@ A single-file, top-down open-world action game inspired by Grand Theft Auto (esp
 - **Procedural sound effects** — every gunshot, explosion, engine rev synthesized via Web Audio API. No audio files anywhere.
 - **Procedural textures** — asphalt, concrete, grass, brick all generated at runtime to offscreen canvases
 - **Day/night cycle + dynamic weather** — rain particles, lightning + thunder during storms, fog overlay
+- **Device-select screen** — first screen lets you pick PC or Mobile so the right control set loads even on touch-capable laptops
 - **Local multiplayer** — same-browser cross-tab via BroadcastChannel. Lobby codes, host permissions, per-player cheat/mission overrides, broadcast chat
 - **Mobile touch controls** — virtual joystick, fire button with auto-aim, action buttons
 - **Settings with gameplay assists** — difficulty presets, aim assist, health regen, custom damage multipliers, god mode
@@ -45,7 +53,7 @@ A single-file, top-down open-world action game inspired by Grand Theft Auto (esp
 | **Left Click** | Fire |
 | **Space** | Hold to fire continuously |
 | **E** | Interact (enter/exit vehicle, plant charge, hack terminal, open store) |
-| **1-7** | Switch weapons (fists, pistol, shotgun, SMG, rifle, gatling, laser) |
+| **1-8** | Switch weapons (fists, pistol, shotgun, SMG, rifle, gatling, RPG, laser) |
 | **Q** | Cycle explosive type (grenade → smoke → molotov) |
 | **G** | Throw selected explosive |
 | **T** or **/** | Focus chat (type cheats or messages) |
@@ -108,7 +116,20 @@ Each mission:
 - Locked until the previous mission is complete (the Dev Panel cheat lets you replay or skip)
 - Triggers a **Story Interlude** overlay between missions linking the narrative
 
-Beat all 10 to unlock the **Level Maker**.
+Beat all 10 to unlock the **Level Maker** and the post-story **Big Job** heist.
+
+### Mission mechanics highlights
+
+These missions go beyond "kill the escort":
+
+- **M1 — First Blood (rescue & extract)**: An ally NPC waits at the dockyard, follows you once you get close, takes damage from enemy bullets. **Mission fails if the contact dies.** You both have to reach the extraction zone.
+- **M5 — Ghost Protocol (stealth)**: Tracks an alarm counter — fire near any live enemy and an alarm is raised. **3 alarms = mission fail.** Echo's silencer upgrade keeps you quiet on pistol/laser.
+- **M6 — The Score (heist collection)**: Grab 3 cash bags from the bank, fight off the response team, then reach the extract.
+- **M10 — Liberty Falls (3-phase boss)**: The final boss has 480 HP. At 66% and 33% he summons reinforcement waves — pace your ammo.
+
+Plus across the other missions: plant bombs, hack terminals, defend zones, drive chase vehicles, fly planes.
+
+### Environmental progression
 
 The world's environment shifts as the story progresses:
 - Mission 1: midday clear
@@ -118,18 +139,33 @@ The world's environment shifts as the story progresses:
 
 ---
 
+## 🏴 Side content (engagement pack)
+
+After unlocking the city you get a stack of free-roam systems on top of the 10-mission story:
+
+- **Bounty Board** — 5 randomized contract types (hunt a marked target, steal a specific vehicle, holdout in a zone, time trial, rampage). Pay scales with difficulty; a new bounty appears when you complete one.
+- **Properties** — buy garages and houses around the map; they earn daily income you can collect on visit. Stored vehicles persist.
+- **Character skills / Trainers** — each playable character has purchasable upgrades (Echo's silencer suppresses heat / alarms on pistol & laser; Marcus's rifle deals +20% dmg; etc.). Buy them from trainers placed around the city.
+- **Dynamic events** — gang fights, armored-car robberies, police chases, and other events spawn in free-roam and grant rep when handled.
+- **Rep system** — your rep score nudges bounty payouts and event frequency.
+- **The Big Job** — a 3-phase post-story heist (collect 3 evidence drops → defend the bank → escape to the airport), with randomized targets every run.
+- **Achievements + lifetime stats** — total kills, deaths, distance driven, money earned/spent, vehicles stolen, missions/bounties/big-jobs completed. Visible from the pause menu → Stats.
+
+---
+
 ## 🤝 Multiplayer
 
 **Note:** Multiplayer currently only works between browser tabs on the **same machine** (via the `BroadcastChannel` API). Cross-internet play would need a WebSocket relay server — see [Future Work](#future-work).
 
 ### How it works
 
-1. Title screen → **MULTIPLAYER**
-2. **Create Lobby** → generates a 6-character code, shows it big
-3. Open another browser tab on the same machine, go to the same page
-4. **MULTIPLAYER** → **Join with Code** → enter the code
-5. Both tabs see each other in the player list
-6. **Host clicks ▶ Start** — both tabs auto-enter the world
+1. **Device-select screen** → pick PC or Mobile. (Skip the wrong one if you're on a touch-capable laptop.)
+2. Title screen → **MULTIPLAYER**
+3. **Create Lobby** → generates a 6-character code, shows it big
+4. Open another browser tab on the same machine, go to the same page
+5. **MULTIPLAYER** → **Join with Code** → enter the code
+6. Both tabs see each other in the player list
+7. **Host clicks ▶ Start** — both tabs auto-enter the world
 
 ### Host permissions
 
@@ -183,16 +219,16 @@ Levels save to `localStorage` and can be exported as base64 share codes.
 <html>
   <head><style>/* ~700 lines of CSS */</style></head>
   <body>
-    <!-- ~250 lines of HTML — title, game, editor, overlays -->
-    <script>/* ~5,500 lines of JavaScript */</script>
+    <!-- ~300 lines of HTML — device picker, title, game, editor, overlays -->
+    <script>/* ~6,600 lines of JavaScript */</script>
   </body>
 </html>
 ```
 
 ### Where state lives
 
-- **`Game`** (JS object in memory) — runtime world: player, buildings, enemies, bullets, particles, camera, time, weather. Cleared on every world regen.
-- **`Save`** (persisted to `localStorage`) — durable: money, completed missions, character, settings, inventory, environment state.
+- **`Game`** (JS object in memory) — runtime world: player, buildings, enemies, bullets, particles, camera, time, weather, plus mission-specific extras (`missionAlly`, `missionObjects`, `missionExtractAvailable`, `chaseVehicles`, `bigJob`, `activeBounty`). Cleared on every world regen.
+- **`Save`** (persisted to `localStorage`, key `libsands_save_v1`) — durable: money, completed missions, character, settings, inventory, environment state, cheats, achievements, lifetime stats, properties owned, rep, character upgrades, big-jobs done.
 - **`MP`** (JS object) — multiplayer state: connected players, lobby code, permissions, channel reference.
 - **`LE`** (JS object) — level editor: current level, history, selected tool/object.
 
@@ -204,7 +240,7 @@ Each frame, in order:
 2. **Pickup layer** — health/armor pickup discs with pulsing glow
 3. **3D depth-sorted pass** — buildings (with extruded walls, windows, roofs, signs), trees, lamp posts, peds, vehicles, enemies, player, remote multiplayer players, Munroe bombs — all sorted by `y` and drawn back-to-front for proper occlusion
 4. **Bullets & particles** — trails, explosions, muzzle flash, blood, sparks
-5. **Mission markers** — interactive objects (charges, terminals), defend-zone reticle, waypoint pillar
+5. **Mission markers** — interactive objects (charges, terminals, cash bags), defend-zone reticle, waypoint pillar, ally NPC + HP bar, extraction-zone pulse
 6. **Weather overlay** — rain particles, fog, lightning flash
 7. **Vignette + day/night color grading**
 8. **Munroe flashbang** (if active)
@@ -284,6 +320,7 @@ In the pause menu (Tab/Esc) → **Settings**:
 ## 🚧 Limitations & Known Issues
 
 - **Multiplayer is local-only** — `BroadcastChannel` doesn't traverse the internet. Cross-machine play needs a WebSocket relay.
+- **Side content runs locally only** — bounties, properties, character upgrades, achievements all live in `localStorage`. They aren't synced between players in a lobby.
 - **No persistent shared world** — each player runs their own simulation in their own browser. Killing an enemy in your game doesn't affect anyone else's game.
 - **Save data is per-domain, per-browser, per-machine** — moving to another device loses progress unless you manually export.
 - **localStorage limit ~5MB** — never likely to hit, but worth knowing.
@@ -320,8 +357,10 @@ cd liberty-sands
 # That's it. Open index.html in any browser.
 ```
 
-Press **Play**. Press **M**. Start Mission 1.
+Press **Play**. Press **M**. Start Mission 1. Keep your contact alive.
 
-When you want to cheat: press **T**, type `iii$`, press Enter.
+When you want to cheat: press **T**, type `iii$`, press Enter. (Or `/help` to list every code.)
+
+Beat all 10 missions to unlock the **Level Maker** and the post-story **Big Job** heist.
 
 Good luck out there.
