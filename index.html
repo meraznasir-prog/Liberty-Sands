@@ -426,7 +426,7 @@
     <span class="close-x" data-close="ov-multiplayer">✕</span>
     <h3>MULTIPLAYER LOBBY</h3>
     <div style="color: var(--muted); font-size: 12px; margin-bottom: 14px; line-height: 1.4;">
-      Local multiplayer via BroadcastChannel — works between browser tabs on the same machine.
+      Cross-device multiplayer via Trystero (WebRTC P2P, BitTorrent-tracker signaling). No server.
       Open this page in two tabs, create a lobby in one and join with the code in the other.
       <br><span style="color: var(--accent)">Real online cross-machine play would need a relay server.</span>
     </div>
@@ -697,7 +697,7 @@
   </div>
 </div>
 <!-- Build marker -->
-<div style="position:fixed; top:4px; right:4px; background:#ffb000; color:#1a1306; padding:2px 8px; border-radius:3px; font-size:10px; font-family:monospace; z-index:99999; pointer-events:none;">BUILD 57 · GRID FIX</div>
+<div style="position:fixed; top:4px; right:4px; background:#ffb000; color:#1a1306; padding:2px 8px; border-radius:3px; font-size:10px; font-family:monospace; z-index:99999; pointer-events:none;">BUILD 58 · MP P2P</div>
 
 <!-- Mobile touch controls — visible only when body.touch class is set -->
 <div id="touch-controls">
@@ -980,11 +980,61 @@ $('btn-play').addEventListener('click', () => startGame());
 $('btn-settings').addEventListener('click', () => openOverlay('ov-settings'));
 $('btn-multiplayer').addEventListener('click', () => openMultiplayer());
 
-/* ----------------- MULTIPLAYER (BroadcastChannel-based) -----------------
-   Real same-machine multiplayer between browser tabs. Cross-machine play
-   would need a relay server (WebSocket, Firebase, PartyKit etc.) which is
-   out of scope for a single-file game.
+/* ----------------- MULTIPLAYER (Trystero / WebRTC P2P) -----------------
+   Cross-device multiplayer over WebRTC, with peer discovery via the public
+   BitTorrent tracker network (Trystero's `torrent` strategy). No backend
+   server to run — the library is fetched from a CDN and peers connect
+   directly browser-to-browser. Works on any static host (GitHub Pages,
+   Netlify, file://, etc.) as long as the player has internet access.
+
+   The transport below presents a BroadcastChannel-shaped API (.postMessage,
+   .close, .onmessage) so all the lobby / chat / position-sync code that was
+   written against BroadcastChannel works against it unchanged.
 */
+// Create a transport wrapper around a Trystero room. Returns a promise that
+// resolves once the library has loaded and the room is open.
+async function mpCreateTransport(code) {
+  // Dynamic import so the rest of the game still runs even if the CDN is
+  // unreachable — multiplayer is the only thing that breaks.
+  const mod = await import('https://esm.sh/trystero@0.21.5/torrent');
+  const joinRoom = mod.joinRoom || (mod.default && mod.default.joinRoom);
+  if (!joinRoom) throw new Error('Trystero failed to load (no joinRoom export)');
+  const room = joinRoom({ appId: 'libsands-mp' }, code);
+  // ALL game messages flow through a single named action.
+  const [sendMsg, getMsg] = room.makeAction('m');
+  const transport = {
+    _room: room,
+    _peers: {},          // Trystero peerId → MP.id (filled by the first hello)
+    postMessage(msg) {
+      try { sendMsg(msg); } catch (e) { console.warn('[mp] send failed', e); }
+    },
+    close() {
+      try { room.leave(); } catch (e) {}
+    },
+    onmessage: null,
+  };
+  getMsg((data, peerId) => {
+    if (data && data.id) transport._peers[peerId] = data.id;
+    if (transport.onmessage) transport.onmessage({ data });
+  });
+  // When Trystero sees a new peer, send our identity to them so they show up
+  // in the lobby. (The existing hello handler dedups — safe to repeat.)
+  room.onPeerJoin(peerId => {
+    try {
+      sendMsg({ t: 'hello', id: MP.id, name: MP.name, character: Save.character }, peerId);
+    } catch (e) {}
+  });
+  // Synthesize a 'leave' event when Trystero notices a peer has dropped, so
+  // the lobby UI cleans up without waiting for the 10s stale-timeout.
+  room.onPeerLeave(peerId => {
+    const id = transport._peers[peerId];
+    if (id && transport.onmessage) {
+      transport.onmessage({ data: { t: 'leave', id } });
+    }
+    delete transport._peers[peerId];
+  });
+  return transport;
+}
 const MP = {
   id: Math.random().toString(36).slice(2, 8),
   name: 'Player',
@@ -1073,25 +1123,37 @@ $('mp-start').addEventListener('click', () => {
 });
 
 function mpConnect() {
-  if (MP.channel) MP.channel.close();
-  MP.channel = new BroadcastChannel('libsands-lobby-' + MP.code);
+  if (MP.channel) { try { MP.channel.close(); } catch (e) {} }
+  MP.channel = null;
   MP.players = {};
   MP.players[MP.id] = { name: MP.name, x: 0, y: 0, angle: 0, character: Save.character, lastSeen: performance.now() };
-  MP.channel.onmessage = (e) => mpHandle(e.data);
-  // Start the standalone broadcaster so position keeps flowing regardless of pause/chat.
-  mpStartBroadcast();
-  // Announce ourselves
-  MP.channel.postMessage({ t: 'hello', id: MP.id, name: MP.name, character: Save.character });
   $('mp-state-idle').style.display = 'none';
   $('mp-state-lobby').style.display = '';
   $('mp-lobby-code').textContent = MP.code;
-  // Show or hide the host permissions panel based on role.
   $('mp-perms-section').style.display = MP.isHost ? '' : 'none';
-  // Only the host gets the Start button — clients see a "Waiting…" indicator.
   $('mp-start').style.display   = MP.isHost ? '' : 'none';
   $('mp-waiting').style.display = MP.isHost ? 'none' : 'flex';
   if (MP.isHost) buildMpPermsUI();
   renderMpPlayers();
+  toast('Connecting to lobby — give it a moment…', 2500);
+  mpCreateTransport(MP.code).then(transport => {
+    // Player may have backed out of the lobby UI before the transport finished
+    // opening. If so, drop the channel rather than re-binding.
+    if (MP.code !== transport._room?._roomId && MP.code === null) {
+      try { transport.close(); } catch (e) {}
+      return;
+    }
+    MP.channel = transport;
+    MP.channel.onmessage = (e) => mpHandle(e.data);
+    mpStartBroadcast();
+    // Initial broadcast — peers already in the room see us right away.
+    MP.channel.postMessage({ t: 'hello', id: MP.id, name: MP.name, character: Save.character });
+    toast(MP.isHost ? `Lobby ${MP.code} ready — share the code` : `Joined lobby ${MP.code}`, 2800);
+  }).catch(err => {
+    console.error('[mp] connect failed', err);
+    toast('Multiplayer failed to start — check your internet and try again.', 4000);
+    mpDisconnect();
+  });
 }
 
 // Build the host's permissions UI — master toggles + per-cheat checkboxes.

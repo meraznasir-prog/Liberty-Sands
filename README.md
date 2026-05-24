@@ -34,7 +34,7 @@ A single-file, top-down open-world action game inspired by Grand Theft Auto (esp
 - **Procedural textures** — asphalt, concrete, grass, brick all generated at runtime to offscreen canvases
 - **Day/night cycle + dynamic weather** — rain particles, lightning + thunder during storms, fog overlay
 - **Device-select screen** — first screen lets you pick PC or Mobile so the right control set loads even on touch-capable laptops
-- **Local multiplayer** — same-browser cross-tab via BroadcastChannel. Lobby codes, host permissions, per-player cheat/mission overrides, broadcast chat
+- **Cross-device multiplayer** — WebRTC peer-to-peer via Trystero (BitTorrent trackers do the signaling). No server to run. Lobby codes, host permissions, per-player cheat/mission overrides, broadcast chat
 - **Mobile touch controls** — virtual joystick, fire button with auto-aim, action buttons
 - **Settings with gameplay assists** — difficulty presets, aim assist, health regen, custom damage multipliers, god mode
 - **Full Level Maker** — drop-in custom levels with terrain, NPCs, traffic, cinematics, props
@@ -155,7 +155,7 @@ After unlocking the city you get a stack of free-roam systems on top of the 10-m
 
 ## 🤝 Multiplayer
 
-**Note:** Multiplayer currently only works between browser tabs on the **same machine** (via the `BroadcastChannel` API). Cross-internet play would need a WebSocket relay server — see [Future Work](#future-work).
+**Cross-device multiplayer over WebRTC P2P.** No server to run — peer discovery rides on the public BitTorrent tracker network via [Trystero](https://github.com/dmotz/trystero). The game pulls Trystero from a CDN on first connect; everything else is just your `index.html`. Friends on different laptops / phones / networks can join.
 
 ### How it works
 
@@ -254,12 +254,12 @@ Each frame, in order:
 
 ### Multiplayer wire format
 
-Messages over the `BroadcastChannel('libsands-lobby-' + code)`:
+Messages travel over a single Trystero `makeAction('m')` channel, scoped to a room ID equal to the 6-character lobby code. Peer discovery uses public BitTorrent trackers; the actual game data is sent peer-to-peer via WebRTC data channels.
 
 | Type | Payload | Purpose |
 |---|---|---|
-| `hello` | `{id, name, character}` | First join announcement (no longer echoed — dedup'd) |
-| `leave` | `{id}` | Graceful disconnect |
+| `hello` | `{id, name, character}` | First join announcement (auto-resent when Trystero reports a new peer) |
+| `leave` | `{id}` | Graceful disconnect (also synthesized from Trystero's `onPeerLeave`) |
 | `pos` | `{id, name, character, x, y, angle, weapon}` | Position update, fired every 100ms |
 | `perms` | `{id, perms}` | Host broadcasts updated permissions |
 | `start` | `{id}` | Host signals all clients to enter the game |
@@ -319,7 +319,8 @@ In the pause menu (Tab/Esc) → **Settings**:
 
 ## 🚧 Limitations & Known Issues
 
-- **Multiplayer is local-only** — `BroadcastChannel` doesn't traverse the internet. Cross-machine play needs a WebSocket relay.
+- **Multiplayer needs internet** — Trystero's tracker discovery requires the player to be online. The two browsers also need WebRTC to be allowed by their networks (most home / coffee-shop Wi-Fi is fine; some strict corporate / school firewalls block it).
+- **First-connect lag** — initial peer discovery via BitTorrent trackers can take 5–20 seconds. After that, messages are instant.
 - **Side content runs locally only** — bounties, properties, character upgrades, achievements all live in `localStorage`. They aren't synced between players in a lobby.
 - **No persistent shared world** — each player runs their own simulation in their own browser. Killing an enemy in your game doesn't affect anyone else's game.
 - **Save data is per-domain, per-browser, per-machine** — moving to another device loses progress unless you manually export.
@@ -332,8 +333,8 @@ In the pause menu (Tab/Esc) → **Settings**:
 
 If I were to keep extending this:
 
-- **WebSocket relay** (PartyKit, Cloudflare Durable Objects, or a tiny Node `ws` server) for real online multiplayer
-- **Synced game state** — bullets, enemies, missions shared across players
+- **Synced game state** — bullets, enemies, missions shared across players (right now each player runs their own simulation)
+- **Dedicated WebSocket relay** as a fallback when WebRTC is blocked by corporate firewalls
 - **Cross-device saves** via Firebase or a simple sync API
 - **Asset preloading hooks** so users can opt in to real sprite atlases / mp3s without losing the single-file fallback
 - **Splitting the codebase** with a bundler (Vite or esbuild) once it crosses ~10,000 lines — purely for human readability
