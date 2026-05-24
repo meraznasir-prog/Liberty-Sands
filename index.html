@@ -143,6 +143,13 @@
   #dev-dock .row:last-child { border-bottom: none; }
   #dev-dock .label-strong { color: var(--accent); font-weight: 700; font-size:10px; letter-spacing: 1.5px; text-transform: uppercase; }
 
+  /* Device-select button hover */
+  #dev-pc:hover, #dev-mobile:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 6px 22px rgba(255,176,0,0.35), 0 0 16px rgba(255,176,0,0.2) !important;
+    transform: translateY(-2px);
+  }
+
   /* Chat — fixed-position, always visible. Placed at bottom-center so it
      doesn't overlap any HUD corner. */
   #chat {
@@ -317,7 +324,30 @@
 <body>
 <div id="root">
   <!-- TITLE SCREEN -->
-  <div id="title" class="screen active">
+  <!-- DEVICE SELECT — the first thing every new visitor sees. Picks PC vs Mobile
+       controls so we don't show the on-screen joystick on touch-capable laptops. -->
+  <div id="device-select" class="screen active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(180deg, #0b0d12 0%, #1a1426 50%, #2a1a1a 100%);">
+    <h1 style="font-size: 76px; margin: 0 0 6px; letter-spacing: 10px; background: linear-gradient(180deg, #ffd57a 0%, #ffb000 50%, #b87800 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 16px rgba(255,176,0,0.4));">LIBERTY SANDS</h1>
+    <h2 style="color: var(--muted); letter-spacing: 6px; font-size: 14px; margin: 0 0 50px;">CHOOSE YOUR DEVICE</h2>
+    <div style="display:flex; gap: 32px; flex-wrap: wrap; justify-content: center; max-width: 800px;">
+      <button id="dev-pc" style="cursor:pointer; width: 240px; padding: 32px 24px; background: linear-gradient(180deg, #1d2230 0%, #151923 100%); border: 2px solid #2a3142; border-radius: 10px; color: var(--text); font-family: inherit; font-size: 17px; letter-spacing: 2px; transition: all .2s; box-shadow: 0 6px 18px rgba(0,0,0,0.4);">
+        <div style="font-size: 60px; margin-bottom: 14px;">🖥️</div>
+        <div style="font-weight:700;">PC</div>
+        <div style="color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: 1px;">Keyboard + Mouse</div>
+      </button>
+      <button id="dev-mobile" style="cursor:pointer; width: 240px; padding: 32px 24px; background: linear-gradient(180deg, #1d2230 0%, #151923 100%); border: 2px solid #2a3142; border-radius: 10px; color: var(--text); font-family: inherit; font-size: 17px; letter-spacing: 2px; transition: all .2s; box-shadow: 0 6px 18px rgba(0,0,0,0.4);">
+        <div style="font-size: 60px; margin-bottom: 14px;">📱</div>
+        <div style="font-weight:700;">MOBILE</div>
+        <div style="color: var(--muted); font-size: 12px; margin-top: 6px; letter-spacing: 1px;">Touch Controls</div>
+      </button>
+    </div>
+    <div style="margin-top: 40px; color: var(--muted); font-size: 11px; max-width: 480px; text-align: center; line-height: 1.6;">
+      You can change this later in Settings.<br>
+      Pick PC if you have a keyboard and mouse — the on-screen joystick won't appear.
+    </div>
+  </div>
+
+  <div id="title" class="screen">
     <h1>LIBERTY SANDS</h1>
     <h2>AN OPEN WORLD PROTOTYPE</h2>
     <div class="menu-wrap">
@@ -361,7 +391,7 @@
       </div>
       <div class="bottom-left">
         <div class="objective" id="hud-mission">FREE ROAM</div>
-        <div id="hud-objective" style="font-size:13px; color:var(--text); margin-top:6px; line-height:1.4;">M missions • E interact • T chat/cheats • 1-7 weapons • Click fire</div>
+        <div id="hud-objective" style="font-size:13px; color:var(--text); margin-top:6px; line-height:1.4;">M missions • E interact • T chat • H horn • 1-8 weapons • Click fire</div>
         <button id="hud-chat-btn" style="margin-top:8px; padding:6px 12px; background:rgba(255,176,0,0.15); color:var(--accent); border:1px solid var(--accent); border-radius: 4px; cursor: pointer; font-size: 12px; letter-spacing: 1px; pointer-events: auto;">💬 FOCUS CHAT (T)</button>
       </div>
       <canvas id="minimap" width="200" height="200"></canvas>
@@ -443,6 +473,52 @@
   </div>
 </div>
 
+<div class="overlay" id="ov-bounties">
+  <div class="panel" style="min-width:560px; max-width: 720px;">
+    <span class="close-x" data-close="ov-bounties">✕</span>
+    <h3 style="color:#5ad27a;">🎯 BOUNTY BOARD</h3>
+    <div style="color: var(--muted); font-size: 12px; margin-bottom: 14px;">Pick a contract. Refreshes after each completion.</div>
+    <div id="bounty-list"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-property">
+  <div class="panel" style="min-width:480px;">
+    <span class="close-x" data-close="ov-property">✕</span>
+    <h3 id="prop-title">PROPERTY</h3>
+    <div id="prop-body" style="color: var(--text); margin: 10px 0; line-height: 1.6;"></div>
+    <div id="prop-actions" style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-trainer">
+  <div class="panel" style="min-width:520px;">
+    <span class="close-x" data-close="ov-trainer">✕</span>
+    <h3>🏋️ TRAINER</h3>
+    <div style="color: var(--muted); font-size: 12px; margin-bottom: 14px;">Upgrade the character you're currently playing as.</div>
+    <div id="trainer-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-stats">
+  <div class="panel" style="min-width:520px;">
+    <span class="close-x" data-close="ov-stats">✕</span>
+    <h3>📊 STATS & ACHIEVEMENTS</h3>
+    <div id="stats-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-bigjob">
+  <div class="panel" style="min-width:560px; text-align:center;">
+    <h3 style="color: var(--accent); letter-spacing: 4px;">★ THE BIG JOB ★</h3>
+    <div id="bigjob-body" style="color: var(--text); margin: 16px 0; line-height: 1.6;"></div>
+    <div style="margin-top:16px; display:flex; gap:8px; justify-content:center;">
+      <button class="btn small primary" id="bigjob-start">Begin the Score</button>
+      <button class="btn small" data-close="ov-bigjob">Not Now</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="ov-settings">
   <div class="panel" style="min-width:520px;">
     <span class="close-x" data-close="ov-settings">✕</span>
@@ -469,7 +545,8 @@
     <div class="row"><span>Health Regen <span style="color:var(--muted); font-size:11px;">— after 3s out of combat</span></span><input type="checkbox" id="set-regen" checked/></div>
     <div class="row"><span>God Mode <span style="color:var(--muted); font-size:11px;">— take no damage</span></span><input type="checkbox" id="set-godMode"/></div>
 
-    <div style="margin-top:14px; display:flex; gap:8px;">
+    <div style="margin-top:14px; display:flex; gap:8px; flex-wrap: wrap;">
+      <button class="btn small" id="set-device">Change Device</button>
       <button class="btn small" id="set-reset">Reset Progress</button>
       <button class="btn small primary" data-close="ov-settings">Done</button>
     </div>
@@ -524,6 +601,7 @@
       <button class="btn small primary" data-close="ov-pause">Resume</button>
       <button class="btn small" id="pause-missions">Missions</button>
       <button class="btn small" id="pause-multiplayer">Multiplayer / Permissions</button>
+      <button class="btn small" id="pause-stats">Stats & Achievements</button>
       <button class="btn small" id="pause-settings">Settings</button>
       <button class="btn small" id="pause-quit">Quit to Title</button>
     </div>
@@ -619,7 +697,7 @@
   </div>
 </div>
 <!-- Build marker -->
-<div style="position:fixed; top:4px; right:4px; background:#ffb000; color:#1a1306; padding:2px 8px; border-radius:3px; font-size:10px; font-family:monospace; z-index:99999; pointer-events:none;">BUILD 49 · CL$ CHEAT</div>
+<div style="position:fixed; top:4px; right:4px; background:#ffb000; color:#1a1306; padding:2px 8px; border-radius:3px; font-size:10px; font-family:monospace; z-index:99999; pointer-events:none;">BUILD 57 · GRID FIX</div>
 
 <!-- Mobile touch controls — visible only when body.touch class is set -->
 <div id="touch-controls">
@@ -677,8 +755,10 @@ const Characters = [
 // (the world location the player must navigate to — shown as a gold pillar).
 const Missions = [
   { id:1, title:'First Blood', char:'marcus',
-    desc:"The dockyard meet was a setup. Marcus's contact is already dead — survive the ambush and figure out who's behind it.",
-    obj:'Defeat 5 attackers', kill:5,
+    desc:"The dockyard meet was a setup. Your contact is wounded but breathing. Get them clear of the shooters and back to the safehouse alive.",
+    obj:'Eliminate 5 attackers AND keep your contact alive', kill:5,
+    rescueAlly: true,                                       // spawns an ally NPC who must survive
+    extractPoint: { x: 200, y: 900 },                       // safehouse — get ally here to complete
     waypoint: { x: -2150, y: -800 }, waypointLabel: 'Dockyard',
     intro:"Three years out of the game, and they still came looking. Whoever sent these clowns to the dockyard is about to learn the old name still bites.",
     outro:"One of the dying gunmen had a burner phone in his pocket. Last number dialed — Rico. Haven't talked to him since Antwerp. Time to find out why someone with my old crew's number wanted me dead."
@@ -705,15 +785,18 @@ const Missions = [
     outro:"Inside the safehouse: federal transit schedules. There's a convoy moving the cartel's bookkeeper across town tonight — three vehicles, six agents. We need the bookkeeper alive. Loud will get him killed. Need Echo."
   },
   { id:5, title:'Ghost Protocol', char:'echo',
-    desc:"Federal convoy. Echo slips in, lifts the bookkeeper, slips out. The moment they know we're there, the witness gets a bullet.",
-    obj:'Reach the convoy and eliminate the escort', stealth:true, kill:5,
+    desc:"Federal convoy. Echo slips in, lifts the bookkeeper, slips out. The moment they know we're there, the witness gets a bullet. Stay silent — three alarms and it's over.",
+    obj:'Reach the convoy quietly (max 2 alarms) and eliminate the escort', stealth:true, kill:5,
+    stealthLimit: 3,                                        // 3 alarms triggers fail
     waypoint: { x: 1500, y: 300 }, waypointLabel: 'Convoy Route',
     intro:"Echo only takes the contracts no one else can. This is one of them — no alarms, no chase, no body count the news will notice.",
     outro:"Got the bookkeeper. He sings the whole drive back: there's a ledger. Cartel's books, every dirty cop and fed on the take. It's in a private bank vault downtown. We've got 18 hours before they move it."
   },
   { id:6, title:'The Score', char:'marcus',
-    desc:"Daylight bank heist. Six minutes to get in, grab the ledger, get out. Anything longer, we're dead.",
-    obj:'Survive the bank, eliminate the response team', kill:8,
+    desc:"Daylight bank heist. Three cash bags inside, then extract. Six minutes max — anything longer, we're dead.",
+    obj:'Grab 3 cash bags inside, fight off the response team (8 kills), extract to the safehouse', kill:8,
+    requireBags: 3,                                         // 3 collectable cash bags in the bank
+    extractPoint: { x: 200, y: 900 },                       // safehouse extract
     waypoint: { x: -100, y: 150 }, waypointLabel: 'Liberty Bank',
     intro:"Marcus runs the score himself. He's been planning a job like this since before the dockyard hit — he just didn't expect to be running for his life when he pulled it.",
     outro:"We've got the ledger. We've also got every cop in the city behind us. Need to lose the heat before they bottle us on the bridge. Rico's at the wheel — time to drive."
@@ -742,8 +825,9 @@ const Missions = [
     outro:"Compound is rubble. But the man at the top got out — chopper lifted him off the roof, headed for his private island estate. He thinks he's safe out there. He doesn't know Echo's coming."
   },
   { id:10, title:'Liberty Falls', char:'echo',
-    desc:"Private island estate. Twelve elite guards. One target. Echo goes in alone.",
-    obj:'Eliminate the elite guards and the boss', kill:12, boss:true,
+    desc:"Private island estate. Twelve elite guards. One target with three phases — he calls in fresh squads twice before he finally falls. Echo goes in alone.",
+    obj:'Eliminate 12 guards AND the boss (3 phases — he summons reinforcements at 66% and 33% HP)',
+    kill:12, boss:true, phaseBoss:true,                     // boss has phase-change reinforcements
     waypoint: { x: 2300, y: 2200 }, waypointLabel: 'Boss Estate',
     intro:"Echo takes the contracts no one else can. The man who turned the city into a hunting ground is about to learn what hunted feels like. One night. No backup. No noise.",
     outro:"It's done. The conspiracy dies with him. The crew scatters again, scarred but free. Marcus stays in town — there are always more dockyard meets, more burner phones, more reasons to come out of retirement. But not today. Today, the city sleeps."
@@ -757,6 +841,8 @@ const Weapons = {
   smg:    { name:'SMG',     dmg: 18,  rate: 90,  range: 360, ammo: Infinity, color:'#a0a0a0' },
   rifle:  { name:'Rifle',   dmg: 46,  rate: 380, range: 600, ammo: Infinity, color:'#5a7088' },
   gatling:{ name:'Gatling Gun', dmg: 22, rate: 55, range: 480, ammo: Infinity, color:'#5ad27a'},
+  // RPG fires explosive rockets — slow rate, big splash, very expensive.
+  rpg:    { name:'RPG',     dmg: 250, rate: 900, range: 720, ammo: Infinity, color:'#ff8030', rocket:true },
   // Laser is cheat-only (uue!). Not sold anywhere.
   laser:  { name:'Laser Cannon', dmg: 280, rate: 140, range: 720, ammo: Infinity, color:'#ff66cc', beam:true},
 };
@@ -769,19 +855,50 @@ function loadSave() {
     character: 'marcus',
     settings: {
       volume: 80, sens: 10, minimap: true, fps: false, diff: 'Normal',
-      playerDmg: 1.0, enemyDmg: 1.0, aimAssist: false, regen: true, godMode: false
+      playerDmg: 1.0, enemyDmg: 1.0, aimAssist: false, regen: true, godMode: false,
+      // Modifier toggles
+      ironMan: false, pacifist: false, heatMap: false,
     },
     cheats: { fly:false, infiniteMoney:false, god:false },
     inventory: { grenade: 0, smoke: 0, molotov: 0 },
+    // New systems
+    properties: { garage: false, apartment: false, hangar: false, penthouse: false },
+    storedVehicleColor: null,                          // remembered color of garaged car
+    upgrades: {                                        // per-character bonuses
+      marcus: { maxHpBonus: 0 },
+      rico:   { vehicleNitro: false },
+      nia:    { hackSpeed: 1 },
+      volk:   { grenadeBonus: 0 },
+      echo:   { silencer: false },
+    },
+    rep: { cartel: 0, police: 0, gang: 0 },            // faction reputation
+    stats: {
+      totalKills: 0, totalDeaths: 0, distanceDriven: 0,
+      moneyEarned: 0, moneySpent: 0,
+      missionsCompleted: 0, bountiesCompleted: 0, eventsCompleted: 0,
+      vehiclesStolen: 0, headshots: 0,
+    },
+    achievements: [],                                  // unlocked achievement ids
+    bigJobsDone: 0,                                    // post-story heist counter
   };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const loaded = JSON.parse(raw);
       // merge so new settings keys backfill on existing saves
-      loaded.settings  = Object.assign({}, defaults.settings,  loaded.settings  || {});
-      loaded.inventory = Object.assign({}, defaults.inventory, loaded.inventory || {});
-      loaded.cheats    = Object.assign({}, defaults.cheats,    loaded.cheats    || {});
+      loaded.settings   = Object.assign({}, defaults.settings,  loaded.settings   || {});
+      loaded.inventory  = Object.assign({}, defaults.inventory, loaded.inventory  || {});
+      loaded.cheats     = Object.assign({}, defaults.cheats,    loaded.cheats     || {});
+      loaded.properties = Object.assign({}, defaults.properties,loaded.properties || {});
+      loaded.upgrades   = Object.assign({}, defaults.upgrades,  loaded.upgrades   || {});
+      loaded.rep        = Object.assign({}, defaults.rep,       loaded.rep        || {});
+      loaded.stats      = Object.assign({}, defaults.stats,     loaded.stats      || {});
+      loaded.achievements = loaded.achievements || [];
+      loaded.bigJobsDone  = loaded.bigJobsDone  || 0;
+      // Deep-merge per-character upgrades.
+      for (const k of Object.keys(defaults.upgrades)) {
+        loaded.upgrades[k] = Object.assign({}, defaults.upgrades[k], loaded.upgrades[k] || {});
+      }
       return loaded;
     }
   } catch(e){}
@@ -820,6 +937,32 @@ function toast(msg, ms=2200) {
 }
 
 /* ----------------- TITLE SCREEN ----------------- */
+/* ----------------- DEVICE SELECT ----------------- */
+function pickDevice(kind) {
+  Save.deviceType = kind;       // 'pc' or 'mobile'
+  persist();
+  if (kind === 'mobile') {
+    document.body.classList.add('touch');
+    setupTouch();   // wire the joystick + buttons if we haven't already
+  } else {
+    // Switching to PC — fully drop touch state so a stale Touch.firing
+    // can't accidentally keep autofiring after the controls are hidden.
+    document.body.classList.remove('touch');
+    Touch.active = false;
+    Touch.firing = false;
+    Touch.joyX = 0; Touch.joyY = 0;
+  }
+  showScreen('title');
+  refreshTitle();
+}
+$('dev-pc').addEventListener('click', () => pickDevice('pc'));
+$('dev-mobile').addEventListener('click', () => pickDevice('mobile'));
+// If the user already chose a device on a previous visit, skip the picker.
+if (Save.deviceType === 'pc' || Save.deviceType === 'mobile') {
+  showScreen('title');
+  if (Save.deviceType === 'mobile') document.body.classList.add('touch');
+}
+
 function refreshTitle() {
   const beat = Save.completed.length >= 10;
   const lm = $('btn-levelmaker');
@@ -982,8 +1125,17 @@ function mpDisconnect() {
   MP.channel = null;
   MP.code = null;
   MP.players = {};
-  $('mp-state-idle').style.display = '';
-  $('mp-state-lobby').style.display = 'none';
+  MP.isHost = false;
+  // Reset lobby permissions so a fresh lobby never inherits stale perPlayer
+  // overrides from a previous session.
+  MP.permissions = {
+    allowCheats: false,
+    cheatList: {},
+    allowStartMission: false,
+    perPlayer: {},
+  };
+  const idleEl = $('mp-state-idle'); if (idleEl) idleEl.style.display = '';
+  const lobEl  = $('mp-state-lobby'); if (lobEl)  lobEl.style.display = 'none';
 }
 function mpHandle(msg) {
   if (!msg || msg.id === MP.id) return; // ignore self echo
@@ -1191,6 +1343,16 @@ $('set-reset').addEventListener('click', () => {
     toast('Progress reset');
   }
 });
+$('set-device').addEventListener('click', () => {
+  // Clear the saved device choice, send the user back to the picker screen.
+  Save.deviceType = null;
+  persist();
+  document.body.classList.remove('touch');
+  closeOverlay('ov-settings');
+  closeOverlay('ov-pause');
+  showScreen('device-select');
+  toast('Pick your device again', 2000);
+});
 
 /* ----------------- LEVEL MAKER MENU ----------------- */
 function openLevelMakerMenu() {
@@ -1245,7 +1407,7 @@ function killOnscreen() {
 
 function giveAllWeapons() {
   if (!Game.player) return;
-  ['shotgun', 'smg', 'rifle', 'gatling', 'laser'].forEach(w => Game.player.weapons.add(w));
+  ['shotgun', 'smg', 'rifle', 'gatling', 'rpg', 'laser'].forEach(w => Game.player.weapons.add(w));
   Game.player.weapon = 'rifle';
   updateHUD();
   toast('ALL WEAPONS GRANTED');
@@ -1388,7 +1550,8 @@ window.addEventListener('keydown', (e) => {
     else if (e.key === '4' && Game.player.weapons.has('smg'))     Game.player.weapon = 'smg';
     else if (e.key === '5' && Game.player.weapons.has('rifle'))   Game.player.weapon = 'rifle';
     else if (e.key === '6' && Game.player.weapons.has('gatling')) Game.player.weapon = 'gatling';
-    else if (e.key === '7' && Game.player.weapons.has('laser'))   Game.player.weapon = 'laser';
+    else if (e.key === '7' && Game.player.weapons.has('rpg'))     Game.player.weapon = 'rpg';
+    else if (e.key === '8' && Game.player.weapons.has('laser'))   Game.player.weapon = 'laser';
     else if (e.key === '+' || e.key === '=') Game.targetZoom = Math.min(3, Game.targetZoom * 1.15);
     else if (e.key === '-' || e.key === '_') Game.targetZoom = Math.max(0.5, Game.targetZoom / 1.15);
     else if (e.key === '0') Game.targetZoom = 1;
@@ -1405,6 +1568,21 @@ window.addEventListener('keydown', (e) => {
     else if (e.key === 'g' || e.key === 'G') {
       throwExplosive(Game.player.currentExplosive || 'grenade');
     }
+    else if (e.key === 'h' || e.key === 'H') {
+      // Horn — only when in a vehicle. Plays a beep, scatters nearby peds.
+      if (Game.player.inVehicle) {
+        playSfx('hit', 250);
+        const v = Game.player.inVehicle;
+        for (const pd of Game.peds) {
+          if (pd.dead) continue;
+          const d = Math.hypot(pd.x - v.x, pd.y - v.y);
+          if (d < 80) {
+            // Scatter away from the car
+            pd.target = [pd.x + (pd.x - v.x) * 6, pd.y + (pd.y - v.y) * 6];
+          }
+        }
+      }
+    }
     updateHUD();
   }
 });
@@ -1412,11 +1590,23 @@ window.addEventListener('keyup', (e) => { Keys[e.key.toLowerCase()] = false; });
 
 /* ----------------- MOBILE TOUCH CONTROLS ----------------- */
 const Touch = { active: false, joyX: 0, joyY: 0, firing: false, autoAimAngle: 0 };
-(function setupTouch() {
-  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
-  if (!isTouch) return;
+let _touchWired = false;  // tracks whether we've already attached the listeners
+function setupTouch() {
+  // Use the player's explicit device choice (stored in Save) if set.
+  // Otherwise fall back to feature detection — a touchscreen laptop reports
+  // ontouchstart even though it's used with mouse/keyboard, which is why we
+  // gate this behind an explicit choice for first-time visitors.
+  const choice = Save && Save.deviceType;
+  if (choice === 'pc') return;
+  if (choice !== 'mobile') {
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints || 0) > 0;
+    if (!isTouch) return;
+  }
   document.body.classList.add('touch');
   Touch.active = true;
+  // Listeners can only be attached once — bail if we already wired them.
+  if (_touchWired) return;
+  _touchWired = true;
 
   const joy = document.getElementById('touch-joystick');
   const stick = document.getElementById('touch-stick');
@@ -1471,7 +1661,7 @@ const Touch = { active: false, joyX: 0, joyY: 0, firing: false, autoAimAngle: 0 
   tap('touch-throw',  () => throwExplosive(Game.player && Game.player.currentExplosive || 'grenade'));
   tap('touch-weapon', () => {
     if (!Game.player) return;
-    const order = ['fists','pistol','shotgun','smg','rifle','gatling','laser'];
+    const order = ['fists','pistol','shotgun','smg','rifle','gatling','rpg','laser'];
     const have = order.filter(w => Game.player.weapons && Game.player.weapons.has(w));
     if (!have.length) return;
     const idx = have.indexOf(Game.player.weapon);
@@ -1481,7 +1671,11 @@ const Touch = { active: false, joyX: 0, joyY: 0, firing: false, autoAimAngle: 0 
   });
   tap('touch-menu', () => openMissionsList());
   tap('touch-chat', () => openChat());
-})();
+}
+// Only wire touch listeners at boot if the user already explicitly chose Mobile.
+// First-time visitors get the device-select screen instead, and pickDevice()
+// will call setupTouch() if they pick Mobile.
+if (Save && Save.deviceType === 'mobile') setupTouch();
 
 // Auto-aim helper used by the fire-while-firing tick: find the closest enemy
 // to the player and return its angle (or fall back to the player's facing).
@@ -1621,6 +1815,8 @@ const Game = {
   time: 0, // game seconds
   daytime: 12, // 0-24 hours
   weather: 'clear',
+  bounties: [],
+  activeBounty: null,
   zoom: 1,
   targetZoom: 1,
   camera: { x: 0, y: 0, zoom: 1 },
@@ -1636,6 +1832,9 @@ const Game = {
   wanted: 0,
   mission: null,
   missionState: null,
+  missionAlly: null,
+  missionFailed: false,
+  missionExtractAvailable: false,
   lastFrame: 0,
   mouseX: 0, mouseY: 0,
   fired: 0,
@@ -1643,15 +1842,23 @@ const Game = {
 };
 
 function newPlayer() {
+  const character = Save.character || 'marcus';
+  // Apply per-character passive bonuses on creation.
+  let maxHp = 150;
+  if (Save.upgrades && Save.upgrades[character]) {
+    const u = Save.upgrades[character];
+    if (u.maxHpBonus) maxHp += u.maxHpBonus;
+  }
+  if (character === 'kingpin') maxHp += 50;  // penthouse character has bonus HP
   return {
     x: 0, y: 0, vx: 0, vy: 0, r: 12,
     angle: 0,
-    hp: 150, maxHp: 150, armor: 0,
+    hp: maxHp, maxHp: maxHp, armor: 0,
     speed: 180,
     weapon: 'pistol',
     weapons: new Set(['fists','pistol']),
     inVehicle: null,
-    character: Save.character || 'marcus',
+    character: character,
     fireCooldown: 0,
     lastHurt: -10,
     currentExplosive: 'grenade',
@@ -1660,6 +1867,13 @@ function newPlayer() {
 
 function startGame() {
   Game.player = newPlayer();
+  // Volk's grenade pouch upgrade grants extra explosives on each respawn/start.
+  if (Game.player.character === 'volk' && Save.upgrades && Save.upgrades.volk && Save.upgrades.volk.grenadeBonus) {
+    Save.inventory.grenade = (Save.inventory.grenade || 0) + Save.upgrades.volk.grenadeBonus;
+    Save.inventory.smoke   = (Save.inventory.smoke   || 0) + Save.upgrades.volk.grenadeBonus;
+    Save.inventory.molotov = (Save.inventory.molotov || 0) + Save.upgrades.volk.grenadeBonus;
+    persistSoon();
+  }
   if (!Tex.asphalt) buildTextures();
   generateWorld();
   // Restore the environment to where the story left it (or apply default based on
@@ -1705,21 +1919,29 @@ function generateWorld(seed=42) {
   Game.sidewalks = []; Game.parks = []; Game.water = []; Game.trees = []; Game.streetlights = []; Game.skidmarks = []; Game.crosswalks = [];
   Game.stores = []; Game.bases = []; Game.fences = []; Game.runways = [];
   Game.munroeBombs = []; Game.flashbang = 0;
+  Game.kiosks = [];                                  // bounty board, trainer, property doors
+  Game.eventTimer = 90 + Math.random() * 90;         // first random event in 90-180s
+  Game.activeEvent = null;
   let r = mulberry32(seed);
   const BLOCK = 280;
   const ROAD_W = 56;
   const SIDEWALK = 14;
 
-  // Roads — wider, with proper sidewalk margins
-  for (let g = -10; g <= 10; g++) {
-    Game.roads.push({ type:'h', y: g*BLOCK - ROAD_W/2, w: 6200, h: ROAD_W });
-    Game.roads.push({ type:'v', x: g*BLOCK - ROAD_W/2, w: ROAD_W, h: 6200 });
+  // Roads run BETWEEN cells (at the half-integer offsets), not through them.
+  // A road at g sits at the boundary between cells gx=g and gx=g+1.
+  // This way cells (centered on gx*BLOCK) stay clear for buildings, with a
+  // sidewalk strip then a road on each side.
+  for (let g = -10; g <= 9; g++) {
+    const off = (g + 0.5) * BLOCK - ROAD_W/2;
+    Game.roads.push({ type:'h', y: off, w: 6200, h: ROAD_W });
+    Game.roads.push({ type:'v', x: off, w: ROAD_W, h: 6200 });
   }
 
-  // Crosswalks at intersections
-  for (let gx = -10; gx <= 10; gx++) {
-    for (let gy = -10; gy <= 10; gy++) {
-      Game.crosswalks.push({ x: gx*BLOCK, y: gy*BLOCK });
+  // Crosswalks at intersections — the road grid's intersections live at the
+  // corners between 4 cells (i.e., at (gx+0.5)*BLOCK, (gy+0.5)*BLOCK).
+  for (let gx = -10; gx <= 9; gx++) {
+    for (let gy = -10; gy <= 9; gy++) {
+      Game.crosswalks.push({ x: (gx + 0.5)*BLOCK, y: (gy + 0.5)*BLOCK });
     }
   }
 
@@ -1859,13 +2081,20 @@ function generateWorld(seed=42) {
     }
   }
 
-  // Remove crosswalks that landed in water channels — they'd look weird floating mid-bay.
-  Game.crosswalks = Game.crosswalks.filter(c => !WATER_COLS.has(Math.round(c.x / BLOCK)));
+  // Remove crosswalks that landed in water channels — they'd look weird floating
+  // mid-bay. With the boundary-aligned grid, all crosswalks now sit at corners
+  // between four cells. A crosswalk is "in water" only if BOTH the cell to its
+  // left AND the cell to its right are water cells.
+  Game.crosswalks = Game.crosswalks.filter(c => {
+    const gxLeft = Math.floor(c.x / BLOCK);
+    const gxRight = gxLeft + 1;
+    return !(WATER_COLS.has(gxLeft) && WATER_COLS.has(gxRight));
+  });
 
-  // Vehicles — placed on roads
+  // Vehicles — placed on roads (which now sit at half-integer offsets)
   for (let i = 0; i < 30; i++) {
     const onH = Math.random() < 0.5;
-    const lane = (Math.floor(rand(-9,9))) * BLOCK + (Math.random()<0.5 ? -12 : 12);
+    const lane = (Math.floor(rand(-10, 9)) + 0.5) * BLOCK + (Math.random()<0.5 ? -12 : 12);
     const along = rand(-2400, 2400);
     const v = onH ? spawnVehicle(along, lane) : spawnVehicle(lane, along);
     v.angle = onH ? 0 : Math.PI/2;
@@ -1907,6 +2136,16 @@ function generateWorld(seed=42) {
   buildPrivateIsland(0, -6000);
   // Build spatial index AFTER bases finished mutating the building list.
   indexBuildings();
+  // Kiosks — interactable points in the world (bounty board, trainer, property doors)
+  Game.kiosks.push({ type:'bounty',    x: 200,   y: 900,  label:'BOUNTY BOARD',     color:'#5ad27a' });
+  Game.kiosks.push({ type:'trainer',   x: 1300,  y: 1300, label:'GYM',              color:'#d4a017' });
+  Game.kiosks.push({ type:'property',  x: -1700, y: 1200, label:'GARAGE',           color:'#7da7ff', prop:'garage'    });
+  Game.kiosks.push({ type:'property',  x: 500,   y: 700,  label:'APARTMENT',        color:'#7da7ff', prop:'apartment' });
+  Game.kiosks.push({ type:'property',  x: -1900, y: 1700, label:'HANGAR',           color:'#7da7ff', prop:'hangar'    });
+  Game.kiosks.push({ type:'property',  x: 0,     y:-5900, label:'PENTHOUSE',        color:'#ff66cc', prop:'penthouse' });
+  Game.kiosks.push({ type:'bigjob',    x: 100,   y: 900,  label:'THE BIG JOB',      color:'#ff5252' });   // co-located with bounty board, only active after Mission 10
+  // Refresh bounties if list is empty
+  if (!Game.bounties || !Game.bounties.length) refreshBounties();
 }
 
 // ============ PRIVATE ISLAND ============
@@ -2293,13 +2532,16 @@ function placeLandmark(L) {
   });
 }
 
-// Returns true if (x, y) lies within the road grid (within ROAD_W/2 + 2 of any cell axis).
-// Used to keep trees from spawning in the middle of streets when a park overlaps the
-// road that cuts through every cell's center.
+// Returns true if (x, y) lies within the road grid. Roads now sit at the
+// boundaries between cells (at half-integer multiples of BLOCK), so we
+// measure the distance to the nearest *boundary*, not the nearest cell center.
 function isOnRoad(x, y) {
   const BLOCK = 280, HALF = 30; // ROAD_W=56 → half + 2 margin
-  const xMod = Math.abs(x - Math.round(x / BLOCK) * BLOCK);
-  const yMod = Math.abs(y - Math.round(y / BLOCK) * BLOCK);
+  // Distance to the closest grid boundary on each axis.
+  const nx = Math.round(x / BLOCK - 0.5) + 0.5;
+  const ny = Math.round(y / BLOCK - 0.5) + 0.5;
+  const xMod = Math.abs(x - nx * BLOCK);
+  const yMod = Math.abs(y - ny * BLOCK);
   return xMod < HALF || yMod < HALF;
 }
 
@@ -2392,12 +2634,81 @@ cv.addEventListener('wheel', (e) => {
   Game.targetZoom = Math.max(0.5, Math.min(3, Game.targetZoom * step));
 }, { passive: false });
 
+// Generic radius-explosion: damage everyone (enemies, peds, chase vehicles,
+// the player themselves) within `radius` of (x,y), falling off with distance.
+// Also chain-detonates any Munroe bombs caught in the blast.
+function explodeAt(x, y, radius, dmg) {
+  // Volk's demolitions expertise: +50% damage and +50% radius
+  if (Game.player && Game.player.character === 'volk') { dmg *= 1.5; radius *= 1.5; }
+  for (const en of Game.enemies) {
+    if (en.dead) continue;
+    const d = Math.hypot(en.x - x, en.y - y);
+    if (d < radius) damageEnemy(en, dmg * (1 - d / radius));
+  }
+  for (const pd of Game.peds) {
+    if (pd.dead) continue;
+    const d = Math.hypot(pd.x - x, pd.y - y);
+    if (d < radius) damagePed(pd, dmg * (1 - d / radius));
+  }
+  if (Game.chaseVehicles) {
+    for (const v of Game.chaseVehicles) {
+      if (v.hp <= 0) continue;
+      const d = Math.hypot(v.x - x, v.y - y);
+      if (d < radius) v.hp -= dmg * (1 - d / radius);
+    }
+  }
+  if (Game.munroeBombs) {
+    for (const mb of Game.munroeBombs) {
+      if (mb.detonated) continue;
+      if (Math.hypot(mb.x - x, mb.y - y) < radius) detonateMunroeBomb(mb);
+    }
+  }
+  // Player self-damage at 40% of full to keep RPG-rocket feedback from being
+  // a one-shot suicide. God Mode and the assist toggle skip this.
+  const pDist = Math.hypot(Game.player.x - x, Game.player.y - y);
+  if (pDist < radius && !Save.cheats.god && !Save.settings.godMode) {
+    Game.player.hp -= dmg * 0.4 * (1 - pDist / radius);
+    Game.player.lastHurt = Game.time;
+    if (Game.player.hp <= 0) onPlayerDeath();
+  }
+  Game.particles.push({ type:'explosion', x, y, life: 0.55, radius: radius * 1.2 });
+  SFX.play('explosion');
+  shake(Math.min(20, radius * 0.18));
+}
+
 function shoot() {
   if (!Game.player) return;
   const w = Weapons[Game.player.weapon];
   const now = performance.now();
   if (now - Game.player.fireCooldown < w.rate) return;
   Game.player.fireCooldown = now;
+  // Stealth alarm tick — Mission 5 fails if you draw too much attention.
+  // Echo's silencer cheat (pistol/laser only) suppresses alarms.
+  if (Game.mission && Game.mission.stealthLimit && Game.missionState && !Game.missionFailed) {
+    const p = Game.player;
+    const silenced = Save.upgrades && Save.upgrades.echo && Save.upgrades.echo.silencer
+                     && Game.player.character === 'echo'
+                     && (Game.player.weapon === 'laser' || Game.player.weapon === 'pistol');
+    if (!silenced && Game.player.weapon !== 'fists') {
+      // Any enemy within 320 units that can see roughly toward us notices the shot.
+      let triggered = false;
+      for (const en of Game.enemies) {
+        if (en.dead) continue;
+        if (Math.hypot(en.x - p.x, en.y - p.y) < 320) { triggered = true; break; }
+      }
+      if (triggered) {
+        Game.missionState.alarmsRaised = (Game.missionState.alarmsRaised || 0) + 1;
+        const lim = Game.mission.stealthLimit;
+        const left = lim - Game.missionState.alarmsRaised;
+        if (Game.missionState.alarmsRaised >= lim) {
+          failMission('Alarm raised too many times');
+          return;
+        } else {
+          toast(`⚠ Alarm raised (${left} left)`, 1500);
+        }
+      }
+    }
+  }
   const p = Game.player;
   const dx = Game.mouseX - cv.width/2, dy = Game.mouseY - cv.height/2;
   let ang = Math.atan2(dy, dx);
@@ -2420,7 +2731,7 @@ function shoot() {
     if (best) ang = best.ang;
   }
   // Muzzle position — distance varies per weapon to match the gun barrel tip on the humanoid sprite.
-  const muzzleDist = { fists: p.r + 6, pistol: 28, shotgun: 34, smg: 30, rifle: 38, gatling: 36, laser: 40 }[p.weapon] || 28;
+  const muzzleDist = { fists: p.r + 6, pistol: 28, shotgun: 34, smg: 30, rifle: 38, gatling: 36, rpg: 42, laser: 40 }[p.weapon] || 28;
   const mx = p.x + Math.cos(ang) * muzzleDist;
   const my = p.y + Math.sin(ang) * muzzleDist;
   if (w.beam) {
@@ -2451,6 +2762,18 @@ function shoot() {
     Game.particles.push({ type:'punch', x:p.x+Math.cos(ang)*20, y:p.y+Math.sin(ang)*20, life: 0.18 });
     SFX.play('punch');
     shake(2);
+  } else if (Game.player.weapon === 'rpg') {
+    // RPG — slow-moving rocket, explodes on impact or end of life.
+    Game.bullets.push({
+      x: mx, y: my,
+      vx: Math.cos(ang) * 680, vy: Math.sin(ang) * 680,
+      life: w.range / 680, dmg: w.dmg,
+      owner: 'player', color: w.color, isRocket: true,
+    });
+    Game.particles.push({ type:'muzzle', x:mx, y:my, life: 0.18 });
+    Game.particles.push({ type:'smoke',  x:mx + Math.cos(ang)*4, y:my + Math.sin(ang)*4, life: 0.7 });
+    SFX.play('explosion');
+    shake(10);
   } else {
     // Shotgun fires a spread; everything else is a single bullet.
     const pellets = w.spread || 1;
@@ -2472,11 +2795,42 @@ function shoot() {
 }
 
 function damageEnemy(en, dmg) {
-  const mult = +(Save.settings.playerDmg ?? 1);
+  let mult = +(Save.settings.playerDmg ?? 1);
+  // Marcus's rifle bonus
+  if (Game.player && Game.player.character === 'marcus' && Game.player.weapon === 'rifle') mult *= 1.2;
   en.hp -= dmg * mult;
+  // Phase boss — Mission 10 boss spawns a wave of reinforcements at 66% and 33% HP.
+  if (en.phaseBoss && en.maxHp > 0 && !en.dead) {
+    const frac = en.hp / en.maxHp;
+    if ((en.phase || 1) < 2 && frac <= 0.66) {
+      en.phase = 2;
+      Game.missionState && (Game.missionState.bossPhase = 2);
+      spawnPhaseReinforcements(en, 3);
+      toast('⚠ Boss Phase 2 — reinforcements!', 2500);
+    } else if ((en.phase || 1) < 3 && frac <= 0.33) {
+      en.phase = 3;
+      Game.missionState && (Game.missionState.bossPhase = 3);
+      spawnPhaseReinforcements(en, 4);
+      toast('⚠ Boss Phase 3 — last stand!', 2500);
+    }
+  }
   if (en.hp <= 0 && !en.dead) { en.dead = true; en.deadAt = performance.now(); onEnemyKilled(en); }
   Game.particles.push({ type:'blood', x:en.x, y:en.y, life: 0.4 });
   playSfx('hit', 40);
+}
+
+// Spawn reinforcements around a boss when a phase threshold is crossed.
+function spawnPhaseReinforcements(boss, n) {
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * Math.PI * 2 + Math.random() * 0.4;
+    Game.enemies.push({
+      x: boss.x + Math.cos(ang) * 160,
+      y: boss.y + Math.sin(ang) * 160,
+      vx: 0, vy: 0, r: 11, hp: 70, maxHp: 70,
+      fireCooldown: 0, faction: 'enemy', color: '#ff8484',
+    });
+  }
+  SFX.play('crash');
 }
 
 function damagePed(pd, dmg) {
@@ -2658,16 +3012,29 @@ function onEnemyKilled(en) {
     Game.missionState.kills = (Game.missionState.kills||0) + 1;
     checkMissionProgress();
   }
-  if (Math.random() < 0.3) {
-    Save.money += 50;
-    persistSoon(); // debounced — was hammering localStorage 30+×/sec during sweeps
-    // No updateHUD here — the throttled per-frame call will pick it up.
+  if (Game.activeBounty && Game.activeBounty.type === 'rampage') {
+    Game.activeBounty.kills = (Game.activeBounty.kills || 0) + 1;
   }
-  // Killing law enforcement / military escalates heat
-  if (en.faction === 'cop')    Game.wanted = Math.min(10, Game.wanted + 1);
-  if (en.faction === 'army')   Game.wanted = Math.min(10, Game.wanted + 0.5);
-  if (en.faction === 'swat')   Game.wanted = Math.min(10, Game.wanted + 0.75);
-  if (en.faction === 'agent')  Game.wanted = Math.min(10, Game.wanted + 0.5);
+  // Track lifetime stats
+  Save.stats = Save.stats || {};
+  Save.stats.totalKills = (Save.stats.totalKills || 0) + 1;
+  tryAward('first_kill');
+  if (Math.random() < 0.3) {
+    const cash = 50;
+    Save.money += cash;
+    Save.stats.moneyEarned = (Save.stats.moneyEarned || 0) + cash;
+    persistSoon();
+  }
+  // Killing law enforcement / military escalates heat (unless Echo's silencer is on for laser/pistol)
+  const silenced = Game.player && Save.upgrades && Save.upgrades.echo && Save.upgrades.echo.silencer
+                   && Game.player.character === 'echo'
+                   && (Game.player.weapon === 'laser' || Game.player.weapon === 'pistol');
+  if (!silenced) {
+    if (en.faction === 'cop')    Game.wanted = Math.min(10, Game.wanted + 1);
+    if (en.faction === 'army')   Game.wanted = Math.min(10, Game.wanted + 0.5);
+    if (en.faction === 'swat')   Game.wanted = Math.min(10, Game.wanted + 0.75);
+    if (en.faction === 'agent')  Game.wanted = Math.min(10, Game.wanted + 0.5);
+  }
 }
 
 // Each star level adds a new branch of the response.
@@ -2760,6 +3127,19 @@ function tryInteract() {
   for (const s of Game.stores || []) {
     if (Math.hypot(s.x - p.x, s.y - p.y) < 60) { openStore(s); return; }
   }
+  // Kiosks — bounty board, trainer, properties, big job
+  for (const k of Game.kiosks || []) {
+    if (Math.hypot(k.x - p.x, k.y - p.y) < 60) {
+      if (k.type === 'bounty')    { openBountyBoard();                 return; }
+      if (k.type === 'trainer')   { openTrainer();                     return; }
+      if (k.type === 'property')  { openProperty(k.prop);              return; }
+      if (k.type === 'bigjob') {
+        if (Save.completed.length < 10) { toast('🔒 Beat the 10-mission story to unlock The Big Job', 3000); return; }
+        openBigJob();
+        return;
+      }
+    }
+  }
   // Vehicles (cars, planes)
   let best = null, bestD = 60;
   Game.vehicles.forEach(v => {
@@ -2793,6 +3173,7 @@ function openStore(store) {
       { label: `SMG ($3,500)`,           cost: 3500,  do: () => { p.weapons.add('smg');     p.weapon='smg';     toast('SMG acquired'); } },
       { label: `Rifle ($8,000)`,         cost: 8000,  do: () => { p.weapons.add('rifle');   p.weapon='rifle';   toast('Rifle acquired'); } },
       { label: `Gatling Gun ($50,000)`,  cost: 50000, do: () => { p.weapons.add('gatling'); p.weapon='gatling'; toast('Gatling acquired'); } },
+      { label: `RPG ($75,000)`,          cost: 75000, do: () => { p.weapons.add('rpg');     p.weapon='rpg';     toast('RPG acquired — handle with care'); } },
       { label: `Body Armor ($200)`,      cost: 200,   do: () => { p.armor = 100; toast('+100 armor'); } },
       { label: `Grenades ×3 ($800)`,         cost: 800,  do: () => { Save.inventory.grenade = (Save.inventory.grenade||0) + 3; persistSoon(); toast('+3 Grenades  (Q cycles, G throws)'); } },
       { label: `Smoke Grenades ×3 ($400)`,   cost: 400,  do: () => { Save.inventory.smoke   = (Save.inventory.smoke||0)   + 3; persistSoon(); toast('+3 Smoke grenades'); } },
@@ -2888,7 +3269,13 @@ function startMission(m) {
   $('mi-start').onclick = () => {
     closeOverlay('ov-mission-intro');
     Game.mission = m;
-    Game.missionState = { kills: 0, droveCar: false, defendTime: 0, terminals: 0, charges: 0, alarmsRaised: 0, reachedWaypoint: false };
+    Game.missionState = {
+      kills: 0, droveCar: false, defendTime: 0,
+      terminals: 0, charges: 0, alarmsRaised: 0,
+      reachedWaypoint: false, allyAlive: true, allyAtExtract: false,
+      bagsCollected: 0, extracted: false,
+      bossPhase: 1,                                         // 1, 2, or 3 — Mission 10 only
+    };
     Game.enemies = [];
     Game.missionObjects = [];
     Game.chaseVehicles = [];
@@ -2946,13 +3333,44 @@ function startMission(m) {
     Game.missionWaveTimer = m.defend ? 18 : 0; // seconds until next wave on defend missions
     for (let i = 0; i < enemyCount; i++) {
       const ang = Math.random() * Math.PI * 2;
+      const isMainBoss = (m.boss && i===0);
+      const bossHp = (m.phaseBoss ? 480 : 280);
       Game.enemies.push({
         x: center.x + Math.cos(ang) * rand(140, 280),
         y: center.y + Math.sin(ang) * rand(140, 280),
-        vx:0, vy:0, r: 11, hp: 60 + (m.boss && i===0 ? 280 : 0), maxHp: 60 + (m.boss && i===0 ? 280 : 0),
-        fireCooldown: 0, faction: 'enemy', boss: (m.boss && i===0), color: (m.boss && i===0)?'#ff66cc':'#ff5252'
+        vx:0, vy:0, r: 11,
+        hp:  60 + (isMainBoss ? bossHp : 0),
+        maxHp: 60 + (isMainBoss ? bossHp : 0),
+        fireCooldown: 0, faction: 'enemy',
+        boss: isMainBoss,
+        phaseBoss: !!(isMainBoss && m.phaseBoss),
+        color: isMainBoss ? '#ff66cc' : '#ff5252'
       });
     }
+    // === Rescue ally (Mission 1) — spawns an NPC contact at the waypoint who follows the player. ===
+    if (m.rescueAlly && m.waypoint) {
+      const spot = findOpenSpot(m.waypoint.x + 30, m.waypoint.y + 30);
+      Game.missionAlly = {
+        x: spot.x, y: spot.y, vx: 0, vy: 0, r: 11,
+        hp: 90, maxHp: 90, faction: 'ally',
+        name: 'Contact', following: false, lastHurt: -10
+      };
+    } else {
+      Game.missionAlly = null;
+    }
+    // === Heist bags (Mission 6) — spawns N cash bags around the waypoint. ===
+    if (m.requireBags && m.waypoint) {
+      for (let i = 0; i < m.requireBags; i++) {
+        const ang = (i / m.requireBags) * Math.PI * 2 + 0.4;
+        const spot = findOpenSpot(m.waypoint.x + Math.cos(ang) * 90, m.waypoint.y + Math.sin(ang) * 90);
+        Game.missionObjects.push({
+          type: 'bag', state: 'pending',
+          x: spot.x, y: spot.y,
+        });
+      }
+    }
+    Game.missionFailed = false;
+    Game.missionExtractAvailable = false;
     if (m.char) { Game.player.character = m.char; }
     updateHUD();
     if (m.waypoint) {
@@ -2967,15 +3385,42 @@ function startMission(m) {
 function checkMissionProgress() {
   const m = Game.mission, s = Game.missionState;
   if (!m || !s) return;
+  if (Game.missionFailed) return;
   // Every requirement that the mission specifies must be satisfied.
   const killReq     = m.kill            ? s.kills >= m.kill : true;
   const defendReq   = m.defend          ? s.defendTime >= m.defend : true;
   const driveReq    = m.drive           ? (s.droveCar && (m.waypoint ? s.reachedWaypoint : true)) : true;
   const chargeReq   = m.requireCharges  ? (s.charges || 0) >= m.requireCharges : true;
   const terminalReq = m.requireTerminals? (s.terminals || 0) >= m.requireTerminals : true;
-  if (killReq && defendReq && driveReq && chargeReq && terminalReq) {
+  const bagReq      = m.requireBags     ? (s.bagsCollected || 0) >= m.requireBags : true;
+  const allyReq     = m.rescueAlly      ? (s.allyAlive && s.allyAtExtract) : true;
+  const extractReq  = m.extractPoint    ? !!s.extracted : true;
+  // Mission fields can imply an extract; flip the "extract available" flag when
+  // every other requirement is met so the HUD/objective text can prompt the player.
+  if (m.extractPoint) {
+    Game.missionExtractAvailable = killReq && defendReq && driveReq && chargeReq && terminalReq && bagReq
+      && (m.rescueAlly ? s.allyAlive : true);
+  }
+  if (killReq && defendReq && driveReq && chargeReq && terminalReq && bagReq && allyReq && extractReq) {
     completeMission();
   }
+}
+
+// Mission failed — show a brief banner and bounce back to the title with the
+// city intact. Called when an alarm-limit is breached or the rescue dies.
+function failMission(reason) {
+  if (!Game.mission || Game.missionFailed) return;
+  Game.missionFailed = true;
+  toast(`✘ Mission Failed — ${reason}`, 4000);
+  SFX.play('death');
+  const failedId = Game.mission.id;
+  setTimeout(() => {
+    // Tear down the mission state (kills any remaining mission entities)
+    Game.enemies = [];
+    cleanupMissionState();
+    toast(`You can retry Mission ${failedId} from the pause menu`, 3500);
+    updateHUD();
+  }, 1800);
 }
 
 // Mission reward scales with mission id — small early, large at the climax.
@@ -3006,11 +3451,447 @@ function applyEnvironment(env) {
   persistSoon();
 }
 
+/* ============ BOUNTIES — side-mission contracts ============ */
+// Five types of randomly-generated contracts. Each rolls fresh targets,
+// waypoints, and pay-out. Refreshes after one is completed.
+const BountyTypes = ['hunt', 'steal', 'holdout', 'time_trial', 'rampage'];
+function randomWaypointInCity() {
+  // Pick a point that's plausibly drivable — biased toward the islands.
+  const islandX = [-1500, 0, 1500][Math.floor(Math.random() * 3)];
+  return { x: islandX + (Math.random() - 0.5) * 1600, y: (Math.random() - 0.5) * 3600 };
+}
+function generateBounty() {
+  const type = BountyTypes[Math.floor(Math.random() * BountyTypes.length)];
+  const wp = randomWaypointInCity();
+  const targets = ['cartel lieutenant', 'street boss', 'corrupt official', 'rogue mercenary', 'informant'];
+  const cars = ['red sports car', 'black SUV', 'yellow taxi', 'blue police car', 'silver van'];
+  const id = 'b_' + Math.random().toString(36).slice(2, 8);
+  const specs = {
+    hunt:       { title: `Take out the ${targets[Math.floor(Math.random()*targets.length)]}`,  reward: 2000 + Math.floor(Math.random() * 4000), need: 1 },
+    steal:      { title: `Steal the ${cars[Math.floor(Math.random()*cars.length)]} and stash it`, reward: 1500 + Math.floor(Math.random() * 3000), need: 1 },
+    holdout:    { title: `Hold position for 30s — they're coming for you`, reward: 3500 + Math.floor(Math.random() * 5000), need: 30 },
+    time_trial: { title: `Reach the waypoint within 30 seconds`,                                reward: 1500 + Math.floor(Math.random() * 2500), need: 30 },
+    rampage:    { title: `Eliminate 6 hostiles in 60 seconds`,                                  reward: 4000 + Math.floor(Math.random() * 4000), need: 6 },
+  };
+  return { id, type, waypoint: wp, ...specs[type] };
+}
+function refreshBounties() {
+  Game.bounties = [];
+  for (let i = 0; i < 5; i++) Game.bounties.push(generateBounty());
+}
+function startBounty(b) {
+  if (Game.activeBounty) { toast('Already on a bounty', 1800); return; }
+  Game.activeBounty = Object.assign({}, b, {
+    progress: 0,
+    timeRemaining: (b.type === 'holdout' || b.type === 'time_trial' || b.type === 'rampage') ? (b.type === 'rampage' ? 60 : b.need) : 0,
+    kills: 0,
+  });
+  closeOverlay('ov-bounties');
+  // Spawn appropriate target NPCs / vehicles at the waypoint
+  if (b.type === 'hunt') {
+    const ang = Math.random() * Math.PI * 2;
+    const pos = findOpenSpot(b.waypoint.x + Math.cos(ang) * 30, b.waypoint.y + Math.sin(ang) * 30);
+    Game.activeBounty.targetEnemy = {
+      x: pos.x, y: pos.y, vx: 0, vy: 0, r: 12, hp: 220, maxHp: 220,
+      fireCooldown: 0, faction: 'enemy', boss: true, color: '#ff66cc', bountyTarget: true,
+    };
+    Game.enemies.push(Game.activeBounty.targetEnemy);
+  } else if (b.type === 'steal') {
+    Game.activeBounty.targetVehicle = spawnVehicle(b.waypoint.x, b.waypoint.y, 'sports');
+    Game.activeBounty.targetVehicle.color = '#ff3030';
+    Game.activeBounty.targetVehicle.bountyTarget = true;
+    Game.vehicles.push(Game.activeBounty.targetVehicle);
+  } else if (b.type === 'holdout' || b.type === 'rampage') {
+    // Spawn waves around the player
+    for (let i = 0; i < (b.type === 'holdout' ? 5 : 8); i++) {
+      const ang = Math.random() * Math.PI * 2;
+      Game.enemies.push({
+        x: Game.player.x + Math.cos(ang) * rand(200, 360),
+        y: Game.player.y + Math.sin(ang) * rand(200, 360),
+        vx:0, vy:0, r:11, hp:50, maxHp:50,
+        fireCooldown: 0, faction:'enemy', color:'#ff5252',
+      });
+    }
+  }
+  toast(`🎯 BOUNTY ACTIVE — ${b.title}`, 3500);
+}
+function completeBounty() {
+  if (!Game.activeBounty) return;
+  const reward = Game.activeBounty.reward;
+  Save.money += reward;
+  Save.stats.bountiesCompleted = (Save.stats.bountiesCompleted || 0) + 1;
+  Save.stats.moneyEarned = (Save.stats.moneyEarned || 0) + reward;
+  persistSoon();
+  updateHUD();
+  toast(`✅ BOUNTY COMPLETE — +$${reward.toLocaleString()}`, 4500);
+  SFX.play('mission_complete');
+  Game.activeBounty = null;
+  // Remove the completed bounty from the list and add a new one to keep the board full.
+  refreshBounties();
+  tryAward('first_bounty');
+}
+function failBounty(reason) {
+  if (!Game.activeBounty) return;
+  toast(`❌ BOUNTY FAILED — ${reason || 'time out'}`, 3500);
+  SFX.play('mission_fail');
+  // Despawn target enemy / vehicle if still around
+  if (Game.activeBounty.targetEnemy) {
+    const i = Game.enemies.indexOf(Game.activeBounty.targetEnemy);
+    if (i >= 0) Game.enemies.splice(i, 1);
+  }
+  if (Game.activeBounty.targetVehicle) {
+    const i = Game.vehicles.indexOf(Game.activeBounty.targetVehicle);
+    if (i >= 0) Game.vehicles.splice(i, 1);
+  }
+  Game.activeBounty = null;
+}
+
 function progressEnvironment() {
   const idx = Math.min(Save.completed.length, EnvironmentProgression.length - 1);
   const env = EnvironmentProgression[idx];
   applyEnvironment(env);
   if (env && env.label) toast(`☁ The city shifts — ${env.label}`, 4500);
+}
+
+/* ============ ACHIEVEMENTS ============ */
+const Achievements = {
+  first_kill:       { name: 'First Blood',           desc: 'Eliminate your first enemy.' },
+  first_bounty:     { name: 'Contract Killer',       desc: 'Complete a bounty.' },
+  first_property:   { name: 'Property Tycoon',       desc: 'Buy your first property.' },
+  story_done:       { name: 'Liberty Falls',         desc: 'Beat the 10-mission story.' },
+  millionaire:      { name: 'Millionaire',           desc: 'Have $1,000,000 at once.' },
+  speed_demon:      { name: 'Speed Demon',           desc: 'Drive 50,000 units total.' },
+  one_man_army:     { name: 'One-Man Army',          desc: 'Kill 500 enemies total.' },
+  pilot:            { name: 'Wings',                 desc: 'Fly a plane.' },
+  island_secret:    { name: 'Hidden Estate',         desc: 'Discover the private island.' },
+  big_job:          { name: 'The Big Score',         desc: 'Complete The Big Job.' },
+  all_weapons:      { name: 'Armory',                desc: 'Own every purchasable weapon.' },
+  pacifist:         { name: 'Pacifist',              desc: 'Complete a mission without killing a single ped.' },
+  roadkill:         { name: 'Hood Ornament',         desc: 'Run over an attacker with a vehicle.' },
+};
+function tryAward(id) {
+  if (!Achievements[id]) return;
+  if (Save.achievements.includes(id)) return;
+  Save.achievements.push(id);
+  persistSoon();
+  toast(`🏆 Achievement — ${Achievements[id].name}`, 4000);
+  SFX.play('pickup');
+}
+
+/* ============ BOUNTY BOARD UI ============ */
+function openBountyBoard() {
+  if (Game.activeBounty) {
+    toast('You\'re already on a bounty', 1800);
+    return;
+  }
+  if (!Game.bounties || !Game.bounties.length) refreshBounties();
+  const list = $('bounty-list');
+  list.innerHTML = '';
+  Game.bounties.forEach((b, i) => {
+    const card = document.createElement('div');
+    card.className = 'mission-card';
+    card.innerHTML = `<div><span class="num">${i+1}.</span> <b>${b.title}</b> <span class="badge" style="color:var(--good)">$${b.reward.toLocaleString()}</span></div>
+      <div style="color:var(--muted); font-size:12px; margin-top:4px;">Type: ${b.type.replace('_',' ')} • Distance: ${Math.round(Math.hypot(b.waypoint.x - Game.player.x, b.waypoint.y - Game.player.y))}m</div>`;
+    card.addEventListener('click', () => startBounty(b));
+    list.appendChild(card);
+  });
+  openOverlay('ov-bounties');
+}
+
+/* ============ PROPERTIES ============ */
+const PropertyCatalog = {
+  garage:    { name: 'Portland Garage',    price: 25000,  desc: 'Stores any vehicle you bring inside. Recall your stored car anytime.' },
+  apartment: { name: 'Staunton Apartment', price: 50000,  desc: 'Fast-travel point. Walking in restores HP, armor, and refills explosives by 1 of each.' },
+  hangar:    { name: 'Airport Hangar',     price: 100000, desc: 'Stores a personal plane. Recall it anytime.' },
+  penthouse: { name: 'Private Penthouse',  price: 250000, desc: 'Unlocks the boss outfit (6th character) and gives a permanent +50 HP.' },
+};
+function openProperty(key) {
+  const prop = PropertyCatalog[key]; if (!prop) return;
+  const owned = !!Save.properties[key];
+  $('prop-title').textContent = prop.name + (owned ? ' (Owned)' : '');
+  $('prop-body').innerHTML = `<div>${prop.desc}</div>${owned ? '' : `<div style="margin-top:10px; color:var(--accent); font-weight:700;">Price: $${prop.price.toLocaleString()}</div>`}`;
+  const actions = $('prop-actions');
+  actions.innerHTML = '';
+  if (!owned) {
+    const buy = document.createElement('button');
+    buy.className = 'btn small primary';
+    buy.textContent = `Buy for $${prop.price.toLocaleString()}`;
+    buy.disabled = Save.money < prop.price;
+    if (Save.money < prop.price) { buy.style.opacity = '0.5'; buy.textContent = 'Cannot afford'; }
+    buy.onclick = () => {
+      if (Save.money < prop.price) return;
+      Save.money -= prop.price;
+      Save.stats.moneySpent = (Save.stats.moneySpent || 0) + prop.price;
+      Save.properties[key] = true;
+      persistSoon(); updateHUD();
+      toast(`🏠 Bought: ${prop.name}`, 3500);
+      tryAward('first_property');
+      if (key === 'penthouse') {
+        toast('✨ Unlocked: KINGPIN — 6th playable character', 4500);
+        // Add Kingpin to Characters if not already there
+        if (!Characters.find(c => c.id === 'kingpin')) {
+          Characters.push({ id:'kingpin', name:'Kingpin', color:'#d4a017', desc:'The crown jewel — bonus HP.' });
+        }
+      }
+      closeOverlay('ov-property');
+    };
+    actions.appendChild(buy);
+  } else {
+    // Owned-property actions
+    if (key === 'garage') {
+      const store = document.createElement('button'); store.className='btn small primary';
+      store.textContent = Game.player.inVehicle ? 'Park current vehicle here' : 'No vehicle to store';
+      store.disabled = !Game.player.inVehicle;
+      store.onclick = () => {
+        if (!Game.player.inVehicle) return;
+        Save.storedVehicleColor = Game.player.inVehicle.color;
+        Save.storedVehicleType  = Game.player.inVehicle.carType || 'sedan';
+        persistSoon();
+        toast(`Vehicle stored at garage`, 2200);
+        closeOverlay('ov-property');
+      };
+      actions.appendChild(store);
+      if (Save.storedVehicleColor) {
+        const recall = document.createElement('button'); recall.className='btn small';
+        recall.textContent = `Recall my ${Save.storedVehicleType || 'car'}`;
+        recall.onclick = () => {
+          // Spawn the stored car next to the garage door
+          const v = spawnVehicle(Game.player.x + 40, Game.player.y, Save.storedVehicleType);
+          v.color = Save.storedVehicleColor;
+          Game.vehicles.push(v);
+          toast(`Your ride is waiting outside`, 2200);
+          closeOverlay('ov-property');
+        };
+        actions.appendChild(recall);
+      }
+    } else if (key === 'apartment') {
+      const rest = document.createElement('button'); rest.className='btn small primary';
+      rest.textContent = 'Rest & resupply (FREE)';
+      rest.onclick = () => {
+        Game.player.hp = Game.player.maxHp;
+        Game.player.armor = 100;
+        Save.inventory.grenade = (Save.inventory.grenade||0) + 1;
+        Save.inventory.smoke   = (Save.inventory.smoke||0)   + 1;
+        Save.inventory.molotov = (Save.inventory.molotov||0) + 1;
+        persistSoon(); updateHUD();
+        toast('Restored to full health, armor, +1 of each explosive', 3500);
+        closeOverlay('ov-property');
+      };
+      actions.appendChild(rest);
+    } else if (key === 'hangar') {
+      const recall = document.createElement('button'); recall.className='btn small primary';
+      recall.textContent = 'Recall personal plane';
+      recall.onclick = () => {
+        const plane = spawnPlane(Game.player.x + 60, Game.player.y, 'prop');
+        plane.color = '#ffb000';   // distinct personal-plane color
+        Game.vehicles.push(plane);
+        toast('Your plane is ready for takeoff', 2200);
+        closeOverlay('ov-property');
+      };
+      actions.appendChild(recall);
+    } else if (key === 'penthouse') {
+      const info = document.createElement('div');
+      info.style.cssText = 'color: var(--accent); font-size: 13px;';
+      info.textContent = 'Kingpin character is unlocked. Use the Dev Panel (eee^) to swap to them.';
+      actions.appendChild(info);
+    }
+  }
+  openOverlay('ov-property');
+}
+
+/* ============ TRAINER ============ */
+const CharacterPassives = {
+  marcus:  '+20% damage with rifles (mission lead bonus)',
+  rico:    '+30% vehicle top speed',
+  nia:     'Hack terminals 50% faster, enemies show on minimap further away',
+  volk:    '+50% explosive damage and 50% wider blast radius',
+  echo:    'Silenced shots (laser/pistol) do not raise wanted level',
+};
+function openTrainer() {
+  const cur = Game.player ? Game.player.character : 'marcus';
+  const ch = Characters.find(c => c.id === cur) || Characters[0];
+  const u = (Save.upgrades && Save.upgrades[cur]) || {};
+  const body = $('trainer-body');
+  const passive = CharacterPassives[cur] || '—';
+  let html = `<div style="margin-bottom: 12px;">Playing as <b style="color:${ch.color}">${ch.name}</b>. Passive: <i>${passive}</i></div>`;
+  // Per-character upgrade
+  const upgrades = {
+    marcus: { label: 'Max HP +20', cost: 8000,  apply: () => { u.maxHpBonus = (u.maxHpBonus||0) + 20; Game.player.maxHp += 20; Game.player.hp += 20; } },
+    rico:   { label: 'Nitro Boost (vehicles)', cost: 12000, apply: () => { u.vehicleNitro = true; } },
+    nia:    { label: 'Faster Hacking',          cost: 10000, apply: () => { u.hackSpeed = 2; } },
+    volk:   { label: 'Grenade Pouch (+2 each on respawn)', cost: 9000, apply: () => { u.grenadeBonus = (u.grenadeBonus||0) + 2; } },
+    echo:   { label: 'Silencer',                cost: 14000, apply: () => { u.silencer = true; } },
+  };
+  const up = upgrades[cur];
+  if (up) {
+    const have = (cur === 'marcus' && u.maxHpBonus >= 20)
+              || (cur === 'rico'   && u.vehicleNitro)
+              || (cur === 'nia'    && u.hackSpeed >= 2)
+              || (cur === 'echo'   && u.silencer);
+    if (have && cur !== 'marcus' && cur !== 'volk') {
+      html += `<div class="row"><span>${up.label}</span><span style="color: var(--good)">OWNED</span></div>`;
+    } else {
+      html += `<div class="row"><span>${up.label}</span><button class="btn small primary" id="trainer-buy">$${up.cost.toLocaleString()}</button></div>`;
+    }
+  }
+  body.innerHTML = html;
+  if ($('trainer-buy')) {
+    $('trainer-buy').onclick = () => {
+      if (Save.money < up.cost) { toast('Not enough cash', 1500); return; }
+      Save.money -= up.cost;
+      Save.stats.moneySpent = (Save.stats.moneySpent || 0) + up.cost;
+      up.apply();
+      Save.upgrades[cur] = u;
+      persistSoon(); updateHUD();
+      toast(`✓ ${up.label} purchased`, 2500);
+      closeOverlay('ov-trainer');
+    };
+  }
+  openOverlay('ov-trainer');
+}
+
+/* ============ THE BIG JOB ============ */
+function openBigJob() {
+  const reward = 250000;
+  $('bigjob-body').innerHTML = `Three phases. One night.<br/>
+    <b style="color: var(--accent)">Reward: $${reward.toLocaleString()}</b> plus a random unlock.<br/><br/>
+    <span style="color: var(--muted); font-size: 12px;">Phase 1: collect 3 evidence drops across the city.<br/>
+    Phase 2: defend the score for 60 seconds at the bank.<br/>
+    Phase 3: extract to the airport while every cop in town chases you.</span>`;
+  $('bigjob-start').onclick = () => {
+    closeOverlay('ov-bigjob');
+    startBigJob();
+  };
+  openOverlay('ov-bigjob');
+}
+/* ============ DYNAMIC RANDOM EVENTS ============ */
+function spawnDynamicEvent() {
+  if (!Game.player) return;
+  const types = ['gang_fight', 'arms_drop', 'civilian_mugging', 'street_race'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const p = Game.player;
+  // Spawn 300-600 units away from the player so they have to investigate.
+  const ang = Math.random() * Math.PI * 2;
+  const dist = 320 + Math.random() * 280;
+  const ex = p.x + Math.cos(ang) * dist;
+  const ey = p.y + Math.sin(ang) * dist;
+  const spot = findOpenSpot(ex, ey, 22);
+
+  if (type === 'gang_fight') {
+    // Spawn two factions fighting each other
+    for (let i = 0; i < 3; i++) {
+      Game.enemies.push({
+        x: spot.x + rand(-60, -20), y: spot.y + rand(-30, 30),
+        vx:0, vy:0, r:11, hp:40, maxHp:40, fireCooldown:0,
+        faction:'gang', color:'#8a4a4a',
+      });
+      Game.enemies.push({
+        x: spot.x + rand(20, 60), y: spot.y + rand(-30, 30),
+        vx:0, vy:0, r:11, hp:40, maxHp:40, fireCooldown:0,
+        faction:'gang2', color:'#4a4a8a',
+      });
+    }
+    toast('🔫 Gang shootout reported nearby', 3500);
+  } else if (type === 'arms_drop') {
+    // Spawn a cluster of weapon pickups guarded by 2 enemies
+    Game.pickups.push({ x: spot.x,      y: spot.y,      type:'health', r:10 });
+    Game.pickups.push({ x: spot.x + 30, y: spot.y,      type:'armor',  r:10 });
+    Game.pickups.push({ x: spot.x - 30, y: spot.y,      type:'health', r:10 });
+    Game.pickups.push({ x: spot.x,      y: spot.y + 30, type:'armor',  r:10 });
+    for (let i = 0; i < 2; i++) {
+      Game.enemies.push({
+        x: spot.x + rand(-50, 50), y: spot.y + rand(-50, 50),
+        vx:0, vy:0, r:11, hp:55, maxHp:55, fireCooldown:0,
+        faction:'enemy', color:'#aa5a3a',
+      });
+    }
+    toast('📦 Arms drop sighted — grab the cache', 3500);
+  } else if (type === 'civilian_mugging') {
+    // 1 civilian ped being attacked by 2 muggers
+    Game.peds.push({
+      x: spot.x, y: spot.y, r:7, vx:0, vy:0,
+      target:[spot.x, spot.y], shirt:'#ddd', pants:'#444', skin:'#d8b58a',
+      hair:'#1a1410', hp: 30, angle: 0, walkPhase: 0,
+    });
+    for (let i = 0; i < 2; i++) {
+      Game.enemies.push({
+        x: spot.x + (i ? 40 : -40), y: spot.y,
+        vx:0, vy:0, r:11, hp:35, maxHp:35, fireCooldown:0,
+        faction:'gang', color:'#5a3a4a',
+      });
+    }
+    toast('🆘 Civilian in trouble — they need help!', 3500);
+  } else if (type === 'street_race') {
+    // Spawn a fast civilian car at the spot, finish line ~600 units away
+    const racer = spawnVehicle(spot.x, spot.y, 'sports');
+    racer.color = '#ffd700';
+    Game.vehicles.push(racer);
+    toast('🏁 Street racer challenging you nearby', 3000);
+  }
+  Game.activeEvent = { type, x: spot.x, y: spot.y };
+  SFX.play('hit');
+}
+
+// Wire the Big Job overlay's Start button — gets set once on load.
+(function wireBigJob() {
+  const btn = document.getElementById('bigjob-start');
+  if (btn) btn.addEventListener('click', () => {
+    closeOverlay('ov-bigjob');
+    startBigJob();
+  });
+})();
+
+function startBigJob() {
+  // Phase 1 — three pickup points scattered across the islands
+  Game.bigJob = {
+    phase: 1,
+    pickups: [
+      { x: -1500 + rand(-200, 200), y: -800 + rand(-200, 200), collected: false },
+      { x:   400 + rand(-200, 200), y:  600 + rand(-200, 200), collected: false },
+      { x:  1700 + rand(-200, 200), y: -1200 + rand(-200, 200), collected: false },
+    ],
+    timer: 0,
+    pursuitSpawned: false,
+  };
+  Game.wanted = 0; Game.maxHeat = false;
+  toast('🎯 THE BIG JOB — Phase 1: Collect 3 evidence drops', 4500);
+  SFX.play('mission_complete');
+}
+function advanceBigJob(toPhase) {
+  if (!Game.bigJob) return;
+  Game.bigJob.phase = toPhase;
+  if (toPhase === 2) {
+    // Defend the bank for 60s
+    Game.bigJob.timer = 60;
+    Game.wanted = 3;
+    toast('Phase 2: Defend the bank for 60 seconds', 4000);
+    // Spawn waves nearby
+    for (let i = 0; i < 8; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      Game.enemies.push({
+        x: Game.player.x + Math.cos(ang) * rand(220, 360),
+        y: Game.player.y + Math.sin(ang) * rand(220, 360),
+        vx:0, vy:0, r:11, hp:60, maxHp:60,
+        fireCooldown: 0, faction:'cop', color:'#3a6fd0',
+      });
+    }
+  } else if (toPhase === 3) {
+    Game.wanted = 5;
+    Game.maxHeat = true;
+    Game.bigJob.airportPos = { x: -1900, y: 1700 };
+    toast('Phase 3: Escape to the airport — drive!', 4500);
+  } else if (toPhase === 'done') {
+    const reward = 250000;
+    Save.money += reward;
+    Save.bigJobsDone = (Save.bigJobsDone || 0) + 1;
+    Save.stats.moneyEarned = (Save.stats.moneyEarned || 0) + reward;
+    persistSoon(); updateHUD();
+    toast(`★ THE BIG JOB COMPLETE — $${reward.toLocaleString()} ★`, 6000);
+    SFX.play('mission_complete');
+    Game.wanted = 0; Game.maxHeat = false;
+    tryAward('big_job');
+    Game.bigJob = null;
+  }
 }
 
 // Weather state — particles + lightning are maintained here each frame.
@@ -3092,6 +3973,8 @@ function completeMission() {
 
     if (firstTime) Save.completed.push(m.id);
     Save.money += reward;
+    Save.stats.moneyEarned = (Save.stats.moneyEarned || 0) + reward;
+    Save.stats.missionsCompleted = (Save.stats.missionsCompleted || 0) + 1;
     persist();
 
     Game.mission = null; Game.missionState = null;
@@ -3233,7 +4116,9 @@ function update(dt) {
   if (p.inVehicle) {
     const v = p.inVehicle;
     const isPlane = v.kind === 'plane';
-    const accel = isPlane ? 520 : 380;
+    // Rico's nitro upgrade boosts top speed/accel for ground vehicles only.
+    const ricoNitro = Game.player.character === 'rico' && Save.upgrades && Save.upgrades.rico && Save.upgrades.rico.vehicleNitro;
+    const accel = isPlane ? 520 : (380 * (ricoNitro ? 1.35 : 1));
     const friction = isPlane ? 0.995 : 0.95;
     const turnRate = isPlane ? 1.4 : 2.5;
     const speed = Math.hypot(v.vx, v.vy);
@@ -3245,6 +4130,10 @@ function update(dt) {
     v.vx *= friction; v.vy *= friction;
     const prevX = v.x, prevY = v.y;
     v.x += v.vx*dt; v.y += v.vy*dt;
+    // Lifetime distance-driven stat
+    const moved = Math.hypot(v.x - prevX, v.y - prevY);
+    if (moved > 0.1) Save.stats.distanceDriven = (Save.stats.distanceDriven || 0) + moved;
+    if (isPlane) tryAward('pilot');
     if (isPlane) {
       // Planes can fly far out — there's a private island ~6000 units north.
       v.x = Math.max(WORLD.minX - 3000, Math.min(WORLD.maxX + 3000, v.x));
@@ -3283,14 +4172,44 @@ function update(dt) {
     p.angle = v.angle;
     // hit peds (planes fly above — no roadkill)
     if (v.kind !== 'plane') {
+      const vspeed = Math.hypot(v.vx, v.vy);
       Game.peds.forEach(pd => {
         const d = Math.hypot(pd.x - v.x, pd.y - v.y);
-        if (d < 20 && Math.hypot(v.vx,v.vy) > 60) {
+        if (d < 20 && vspeed > 60) {
           pd.hp -= 50;
           Game.particles.push({ type:'blood', x:pd.x, y:pd.y, life:0.4 });
           if (pd.hp <= 0 && !pd.dead) { pd.dead = true; Game.wanted = Math.min(5, Game.wanted+1); }
         }
       });
+      // === Roadkill — slam attackers with the car ===
+      // Damage scales with vehicle speed: 60-80 = clip (light), 80-260 = ramp, 260+ = lethal-class.
+      // Hitbox uses the vehicle's longest axis so trucks plow through more.
+      if (vspeed > 60) {
+        const radius = Math.max(v.w, v.h) * 0.55 + 6;
+        const dmg = Math.min(140, vspeed * 0.45);
+        Game.enemies.forEach(en => {
+          if (en.dead) return;
+          // Cooldown so each enemy isn't hit every frame while pinned under the bumper
+          if (en._lastRunOver && (Game.time - en._lastRunOver) < 0.5) return;
+          const d = Math.hypot(en.x - v.x, en.y - v.y);
+          if (d < radius) {
+            en._lastRunOver = Game.time;
+            // Knockback in the direction the car is moving
+            const ang = Math.atan2(v.vy, v.vx);
+            const punch = Math.min(380, vspeed * 1.4);
+            en.x += Math.cos(ang) * 4;
+            en.y += Math.sin(ang) * 4;
+            en.vx = (en.vx || 0) + Math.cos(ang) * punch * 0.02;
+            en.vy = (en.vy || 0) + Math.sin(ang) * punch * 0.02;
+            // Bleed off some of the car's momentum on heavy impact
+            if (en.hp > 30) { v.vx *= 0.94; v.vy *= 0.94; }
+            damageEnemy(en, dmg);
+            shake(Math.min(8, vspeed * 0.02));
+            if (vspeed > 220) playSfx('crash', 220);
+            tryAward && tryAward('roadkill');
+          }
+        });
+      }
     }
   } else {
     const speed = Save.cheats.fly ? 480 : p.speed;
@@ -3324,7 +4243,17 @@ function update(dt) {
   for (let i = Game.bullets.length - 1; i >= 0; i--) {
     const b = Game.bullets[i];
     b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
+    // RPG rockets spew a smoke + spark trail behind them.
+    if (b.isRocket && Math.random() < 0.85) {
+      Game.particles.push({ type:'smoke', x: b.x, y: b.y, life: 0.45 });
+      if (Math.random() < 0.6) Game.particles.push({ type:'spark', x: b.x, y: b.y, life: 0.18 });
+    }
     if (b.life <= 0) {
+      // Rocket that ran out of life without hitting anything still detonates.
+      if (b.isRocket && !b.exploded) {
+        b.exploded = true;
+        explodeAt(b.x, b.y, 110, b.dmg);
+      }
       Game.bullets[i] = Game.bullets[Game.bullets.length - 1];
       Game.bullets.pop();
     }
@@ -3336,12 +4265,20 @@ function update(dt) {
       let hit = false;
       for (const en of Game.enemies) {
         if (en.dead) continue;
-        if (Math.hypot(en.x-b.x, en.y-b.y) < en.r) { damageEnemy(en, b.dmg); b.life = 0; hit = true; break; }
+        if (Math.hypot(en.x-b.x, en.y-b.y) < en.r) {
+          if (b.isRocket) { explodeAt(b.x, b.y, 110, b.dmg); b.exploded = true; }
+          else            { damageEnemy(en, b.dmg); }
+          b.life = 0; hit = true; break;
+        }
       }
       if (!hit) {
         for (const pd of Game.peds) {
           if (pd.dead) continue;
-          if (Math.hypot(pd.x-b.x, pd.y-b.y) < pd.r) { damagePed(pd, b.dmg); b.life = 0; hit = true; break; }
+          if (Math.hypot(pd.x-b.x, pd.y-b.y) < pd.r) {
+            if (b.isRocket) { explodeAt(b.x, b.y, 110, b.dmg); b.exploded = true; }
+            else            { damagePed(pd, b.dmg); }
+            b.life = 0; hit = true; break;
+          }
         }
       }
       // Chase vehicles (Mission 7) — take damage from bullets.
@@ -3349,9 +4286,12 @@ function update(dt) {
         for (const cv2 of Game.chaseVehicles) {
           if (cv2.hp <= 0) continue;
           if (Math.abs(cv2.x - b.x) < cv2.w/2 + 4 && Math.abs(cv2.y - b.y) < cv2.h/2 + 4) {
-            cv2.hp -= b.dmg;
-            Game.particles.push({ type:'spark', x: b.x, y: b.y, life: 0.2 });
-            playSfx('hit', 40);
+            if (b.isRocket) { explodeAt(b.x, b.y, 110, b.dmg); b.exploded = true; }
+            else {
+              cv2.hp -= b.dmg;
+              Game.particles.push({ type:'spark', x: b.x, y: b.y, life: 0.2 });
+              playSfx('hit', 40);
+            }
             b.life = 0; hit = true; break;
           }
         }
@@ -3479,10 +4419,12 @@ function update(dt) {
     if (Math.abs(p.x - isl.x) < isl.w/2 && Math.abs(p.y - isl.y) < isl.h/2) {
       Game.privateIsland.rewardClaimed = true;
       Save.money += 100000;
+      Save.stats.moneyEarned = (Save.stats.moneyEarned || 0) + 100000;
       persistSoon();
       updateHUD();
       toast('🏝 Welcome to the Private Estate — $100,000 found in the safe!', 5500);
       SFX.play('mission_complete');
+      tryAward('island_secret');
     }
   }
 
@@ -3615,9 +4557,21 @@ function update(dt) {
     checkMissionProgress();
   }
 
-  // Mission interactive objects — advance hack/plant timers
+  // Mission interactive objects — advance hack/plant timers; cash bags pick up on contact.
   if (Game.missionObjects && Game.missionState) {
     for (const obj of Game.missionObjects) {
+      if (obj.state === 'done') continue;
+      // Cash bags (Mission 6) — grab on touch, no hold-to-interact.
+      if (obj.type === 'bag') {
+        if (Math.hypot(obj.x - p.x, obj.y - p.y) < 26) {
+          obj.state = 'done';
+          Game.missionState.bagsCollected = (Game.missionState.bagsCollected || 0) + 1;
+          toast(`💰 Bag grabbed (${Game.missionState.bagsCollected}/${Game.mission.requireBags})`, 2200);
+          SFX.play('pickup');
+          checkMissionProgress();
+        }
+        continue;
+      }
       if (obj.state !== 'active') continue;
       // Must stay within 70 units while planting/hacking
       if (Math.hypot(obj.x - p.x, obj.y - p.y) > 70) {
@@ -3642,7 +4596,70 @@ function update(dt) {
     }
   }
 
-  // Mission waypoint arrival — first time the player is within 80 units, toast it
+  // === Mission ally (rescue) — follow the player, take damage, die if HP hits 0 ===
+  if (Game.missionAlly && Game.mission && Game.missionState) {
+    const a = Game.missionAlly;
+    const dx = p.x - a.x, dy = p.y - a.y;
+    const d = Math.hypot(dx, dy);
+    // Start following once the player gets close enough
+    if (!a.following && d < 90) {
+      a.following = true;
+      toast('Contact is following you', 2200);
+    }
+    if (a.following && d > 50) {
+      const speed = 140;
+      a.x += (dx / d) * speed * dt;
+      a.y += (dy / d) * speed * dt;
+    }
+    // Take damage from any enemy bullets that hit (cheap proximity check on hostile bullets)
+    if (Game.bullets) {
+      for (const b of Game.bullets) {
+        if (b.owner === 'player' || b.life <= 0) continue;
+        if (Math.hypot(b.x - a.x, b.y - a.y) < a.r + 4) {
+          a.hp -= b.dmg || 8;
+          a.lastHurt = Game.time;
+          b.life = 0;
+          Game.particles.push({ type:'blood', x:a.x, y:a.y, life:0.4 });
+          if (a.hp <= 0 && Game.missionState.allyAlive) {
+            Game.missionState.allyAlive = false;
+            failMission('Your contact was killed');
+            break;
+          }
+        }
+      }
+    }
+    // Extract check — once the player reaches the extract point WITH the ally following,
+    // count it. The ally follows at ~50 units behind, so we only need them to be
+    // in the same neighborhood, not literally inside the same 70u circle.
+    // Only fires once extraction is unlocked (kills done, ally alive, etc).
+    if (Game.mission.extractPoint && Game.missionExtractAvailable && a.following && Game.missionState.allyAlive && !Game.missionState.allyAtExtract) {
+      const ex = Game.mission.extractPoint;
+      const playerAtExtract = Math.hypot(ex.x - p.x, ex.y - p.y) < 80;
+      const allyNear        = Math.hypot(p.x - a.x, p.y - a.y) < 160;
+      if (playerAtExtract && allyNear) {
+        // Snap the ally next to the player so it visually reads "they made it"
+        a.x = p.x + 14; a.y = p.y + 14;
+        Game.missionState.allyAtExtract = true;
+        toast('Contact extracted — bring it home', 2200);
+      }
+    }
+  }
+
+  // === Extract point — once every other requirement is satisfied, player must reach it ===
+  if (Game.mission && Game.mission.extractPoint && Game.missionExtractAvailable && Game.missionState && !Game.missionState.extracted) {
+    const ex = Game.mission.extractPoint;
+    if (Math.hypot(ex.x - p.x, ex.y - p.y) < 80) {
+      // For rescue missions, the ally must also have caught up.
+      const allyOK = Game.mission.rescueAlly ? Game.missionState.allyAtExtract : true;
+      if (allyOK) {
+        Game.missionState.extracted = true;
+        toast('🚁 Extracting…', 1800);
+        checkMissionProgress();
+      }
+    }
+  }
+
+  // === Mission waypoint arrival — first time the player is within 80 units, toast it
   // and trigger any waypoint-dependent completion checks.
   if (Game.mission && Game.mission.waypoint && Game.missionState && !Game.missionState.reachedWaypoint) {
     const wp = Game.mission.waypoint;
@@ -3674,20 +4691,128 @@ function update(dt) {
 
   // Money cheat keeps it high
   if (Save.cheats.infiniteMoney) { Save.money = 999999999; }
+
+  // === BOUNTY tick ===
+  if (Game.activeBounty) {
+    const ab = Game.activeBounty;
+    if (ab.timeRemaining > 0) ab.timeRemaining -= dt;
+    if (ab.type === 'hunt') {
+      if (ab.targetEnemy && ab.targetEnemy.dead) completeBounty();
+    } else if (ab.type === 'steal') {
+      if (ab.targetVehicle && p.inVehicle === ab.targetVehicle) {
+        const garageX = -1700, garageY = 1200;
+        if (Math.hypot(p.x - garageX, p.y - garageY) < 100) {
+          Save.stats.vehiclesStolen = (Save.stats.vehiclesStolen || 0) + 1;
+          completeBounty();
+        }
+      }
+    } else if (ab.type === 'holdout') {
+      if (Math.hypot(p.x - ab.waypoint.x, p.y - ab.waypoint.y) > 180) {
+        ab.timeRemaining = Math.min(ab.timeRemaining + dt, ab.need);
+      }
+      if (ab.timeRemaining <= 0) completeBounty();
+    } else if (ab.type === 'time_trial') {
+      if (Math.hypot(p.x - ab.waypoint.x, p.y - ab.waypoint.y) < 60) completeBounty();
+      else if (ab.timeRemaining <= 0) failBounty('Out of time');
+    } else if (ab.type === 'rampage') {
+      if (ab.kills >= ab.need) completeBounty();
+      else if (ab.timeRemaining <= 0) failBounty('Time up');
+    }
+  }
+
+  // === BIG JOB tick ===
+  if (Game.bigJob) {
+    const bj = Game.bigJob;
+    if (bj.phase === 1) {
+      for (const pk of bj.pickups) {
+        if (!pk.collected && Math.hypot(p.x - pk.x, p.y - pk.y) < 40) {
+          pk.collected = true;
+          toast(`Evidence collected (${bj.pickups.filter(x => x.collected).length}/3)`, 2500);
+          SFX.play('pickup');
+        }
+      }
+      if (bj.pickups.every(pk => pk.collected)) advanceBigJob(2);
+    } else if (bj.phase === 2) {
+      bj.timer -= dt;
+      bj.waveTimer = (bj.waveTimer || 12) - dt;
+      if (bj.waveTimer <= 0) {
+        bj.waveTimer = 12;
+        for (let i = 0; i < 4; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          Game.enemies.push({
+            x: p.x + Math.cos(ang) * rand(240, 360),
+            y: p.y + Math.sin(ang) * rand(240, 360),
+            vx:0, vy:0, r:11, hp:80, maxHp:80,
+            fireCooldown: 0, faction:'cop', color:'#3a6fd0',
+          });
+        }
+        toast('⚠ More cops incoming', 1500);
+      }
+      if (bj.timer <= 0) advanceBigJob(3);
+    } else if (bj.phase === 3) {
+      if (Math.hypot(p.x - bj.airportPos.x, p.y - bj.airportPos.y) < 120) {
+        advanceBigJob('done');
+      }
+    }
+  }
+
+  // === DYNAMIC EVENTS tick (only when in free-roam) ===
+  if (!Game.mission && !Game.activeBounty && !Game.bigJob) {
+    Game.eventTimer = (Game.eventTimer || 0) - dt;
+    if (Game.eventTimer <= 0) {
+      spawnDynamicEvent();
+      Game.eventTimer = 90 + Math.random() * 90;
+    }
+  }
+
+  // === ACHIEVEMENT CHECKS ===
+  if (Save.money >= 1000000) tryAward('millionaire');
+  if ((Save.stats.totalKills || 0) >= 500) tryAward('one_man_army');
+  if ((Save.stats.distanceDriven || 0) >= 50000) tryAward('speed_demon');
+  if (Save.completed.length >= 10) tryAward('story_done');
+  if (Game.player && Game.player.weapons.has('shotgun') && Game.player.weapons.has('smg') &&
+      Game.player.weapons.has('rifle') && Game.player.weapons.has('gatling') && Game.player.weapons.has('rpg')) {
+    tryAward('all_weapons');
+  }
+
   // Throttle HUD writes to ~10Hz — they hit DOM/layout and don't need 60Hz.
   if ((++_hudTick % 6) === 0) updateHUD();
 }
 let _hudTick = 0;
 
+// Centralised cleanup for any state that could leak from a mission into the
+// next session/respawn — chase vehicles, planted charges, hacked terminals.
+function cleanupMissionState() {
+  Game.mission = null;
+  Game.missionState = null;
+  // Wipe mission-spawned interactive objects (charges, terminals, bags).
+  Game.missionObjects = [];
+  Game.missionAlly = null;
+  Game.missionFailed = false;
+  Game.missionExtractAvailable = false;
+  // Despawn chase vehicles from BOTH the chase tracker and the world list.
+  if (Game.chaseVehicles && Game.chaseVehicles.length) {
+    for (const v of Game.chaseVehicles) {
+      const idx = Game.vehicles.indexOf(v);
+      if (idx >= 0) Game.vehicles.splice(idx, 1);
+    }
+    Game.chaseVehicles = [];
+  }
+  Game.missionWaveTimer = 0;
+}
+
 function onPlayerDeath() {
   SFX.play('mission_fail');
+  Save.stats = Save.stats || {};
+  Save.stats.totalDeaths = (Save.stats.totalDeaths || 0) + 1;
   toast('You died — respawning…');
   Game.player.hp = Game.player.maxHp;
   Game.player.armor = 0;
   Game.player.x = 0; Game.player.y = 0;
   Game.wanted = 0;
   Game.maxHeat = false;
-  if (Game.mission) { toast('Mission failed'); Game.mission = null; Game.missionState = null; }
+  if (Game.mission) toast('Mission failed');
+  cleanupMissionState();
 }
 
 /* ----------------- RENDER ----------------- */
@@ -4137,7 +5262,33 @@ function drawMunroeBomb(mb) {
   cx.textAlign = 'start';
 }
 
+const CrewCallouts = {
+  marcus: ['"I\'m hit!"', '"Need cover!"', '"Damn, I\'m losing it"'],
+  rico:   ['"Get me a medic!"', '"This is bad!"', '"I can\'t hold!"'],
+  nia:    ['"Almost down!"', '"Cover fire!"', '"They\'re winning!"'],
+  volk:   ['"Light \'em up!"', '"Wounded, not done!"', '"I need a sec!"'],
+  echo:   ['"Compromised."', '"Bleeding out."', '"Going dark."'],
+  kingpin:['"Don\'t you dare."', '"Unacceptable!"', '"Get me out!"'],
+};
 function drawPlayerSprite(p) {
+  // Crew callout — text bubble above the player when HP is critical
+  if (p.hp / p.maxHp < 0.3 && Game.time - (p._lastCallout || -10) > 4) {
+    const lines = CrewCallouts[p.character] || CrewCallouts.marcus;
+    p._calloutText = lines[Math.floor(Math.random() * lines.length)];
+    p._calloutUntil = Game.time + 2.2;
+    p._lastCallout = Game.time;
+  }
+  if (p._calloutUntil && Game.time < p._calloutUntil) {
+    const tw = cx.measureText(p._calloutText).width;
+    cx.fillStyle = 'rgba(11,13,18,0.92)';
+    cx.fillRect(p.x - tw/2 - 8, p.y - 36, tw + 16, 16);
+    cx.fillStyle = '#ff5252';
+    cx.font = 'bold 11px sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText(p._calloutText, p.x, p.y - 25);
+    cx.textAlign = 'start';
+  }
+
   const ch = Characters.find(c => c.id === p.character) || Characters[0];
   // shadow
   cx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -4850,17 +6001,47 @@ function render() {
   // === DYNAMIC LAYER ===
   // (Peds / Vehicles / Enemies / Player rendered in 3D depth-sorted pass above.)
 
-  // Bullets (with trails)
+  // Bullets (with trails) — rockets get a fancier sprite.
   for (const b of Game.bullets) {
-    cx.strokeStyle = b.color || '#ffd070';
-    cx.lineWidth = 2;
-    cx.beginPath();
-    cx.moveTo(b.x - b.vx*0.015, b.y - b.vy*0.015);
-    cx.lineTo(b.x, b.y);
-    cx.stroke();
-    cx.lineWidth = 1;
-    cx.fillStyle = '#fff';
-    cx.beginPath(); cx.arc(b.x, b.y, 1.5, 0, Math.PI*2); cx.fill();
+    if (b.isRocket) {
+      // Rocket: ~14×5 body pointing in flight direction, with nose cone and
+      // a flickering orange exhaust plume out the back.
+      cx.save();
+      cx.translate(b.x, b.y);
+      cx.rotate(Math.atan2(b.vy, b.vx));
+      // Body
+      cx.fillStyle = '#444';
+      cx.fillRect(-7, -2.5, 12, 5);
+      // Nose cone
+      cx.fillStyle = '#888';
+      cx.beginPath();
+      cx.moveTo(7, 0); cx.lineTo(5, -2.5); cx.lineTo(5, 2.5); cx.closePath(); cx.fill();
+      // Fins
+      cx.fillStyle = '#2a2a2a';
+      cx.fillRect(-7, -4, 3, 1.5);
+      cx.fillRect(-7,  2.5, 3, 1.5);
+      // Exhaust flame
+      const flickerLen = 6 + Math.random() * 6;
+      cx.fillStyle = 'rgba(255,140,40,0.9)';
+      cx.beginPath();
+      cx.moveTo(-7, -2); cx.lineTo(-7 - flickerLen, 0); cx.lineTo(-7, 2); cx.closePath();
+      cx.fill();
+      cx.fillStyle = 'rgba(255,230,120,0.9)';
+      cx.beginPath();
+      cx.moveTo(-7, -1); cx.lineTo(-7 - flickerLen * 0.55, 0); cx.lineTo(-7, 1); cx.closePath();
+      cx.fill();
+      cx.restore();
+    } else {
+      cx.strokeStyle = b.color || '#ffd070';
+      cx.lineWidth = 2;
+      cx.beginPath();
+      cx.moveTo(b.x - b.vx*0.015, b.y - b.vy*0.015);
+      cx.lineTo(b.x, b.y);
+      cx.stroke();
+      cx.lineWidth = 1;
+      cx.fillStyle = '#fff';
+      cx.beginPath(); cx.arc(b.x, b.y, 1.5, 0, Math.PI*2); cx.fill();
+    }
   }
 
   // Particles
@@ -4925,9 +6106,39 @@ function render() {
     cx.lineWidth = 1;
   }
 
-  // === Mission interactive objects — bombs / terminals ===
+  // === Mission interactive objects — bombs / terminals / bags ===
   if (Game.missionObjects) {
     for (const obj of Game.missionObjects) {
+      if (obj.type === 'bag') {
+        if (obj.state === 'done') continue; // hide collected bags
+        const pulse = 0.55 + 0.45 * Math.sin(Game.time * 5 + obj.x * 0.01);
+        // Glow
+        cx.fillStyle = `rgba(255,220,80,${0.18*pulse})`;
+        cx.beginPath(); cx.arc(obj.x, obj.y, 22, 0, Math.PI*2); cx.fill();
+        // Bag body
+        cx.fillStyle = '#a07028';
+        cx.fillRect(obj.x - 8, obj.y - 6, 16, 13);
+        cx.fillStyle = '#7a541c';
+        cx.fillRect(obj.x - 8, obj.y + 4, 16, 3);
+        // Tie at the top
+        cx.strokeStyle = '#5a3a14';
+        cx.lineWidth = 1.5;
+        cx.beginPath();
+        cx.moveTo(obj.x - 4, obj.y - 6); cx.lineTo(obj.x - 4, obj.y - 9);
+        cx.moveTo(obj.x + 4, obj.y - 6); cx.lineTo(obj.x + 4, obj.y - 9);
+        cx.stroke();
+        cx.lineWidth = 1;
+        // $
+        cx.fillStyle = '#ffe070';
+        cx.font = 'bold 10px sans-serif';
+        cx.textAlign = 'center';
+        cx.fillText('$', obj.x, obj.y + 3);
+        cx.fillStyle = '#fff';
+        cx.font = 'bold 9px sans-serif';
+        cx.fillText('GRAB', obj.x, obj.y - 14);
+        cx.textAlign = 'start';
+        continue;
+      }
       if (obj.state === 'done') {
         // Done — green check
         cx.fillStyle = 'rgba(90,210,122,0.25)';
@@ -4970,6 +6181,50 @@ function render() {
       cx.fillText(lbl, obj.x, obj.y - 26);
       cx.textAlign = 'start';
     }
+  }
+
+  // === Mission ally (rescue NPC) ===
+  if (Game.missionAlly && Game.missionState && Game.missionState.allyAlive) {
+    const a = Game.missionAlly;
+    // Pulsing ring so the player can spot the ally at a glance
+    const pulse = 0.5 + 0.5 * Math.sin(Game.time * 3);
+    cx.strokeStyle = `rgba(90,210,255,${0.4 + pulse*0.3})`;
+    cx.lineWidth = 2;
+    cx.beginPath(); cx.arc(a.x, a.y + 14, 12, 0, Math.PI*2); cx.stroke();
+    cx.lineWidth = 1;
+    // Body
+    cx.fillStyle = '#1a2030';
+    cx.beginPath(); cx.arc(a.x, a.y, 8, 0, Math.PI*2); cx.fill();
+    cx.fillStyle = '#d4b888';
+    cx.beginPath(); cx.arc(a.x, a.y - 6, 4.5, 0, Math.PI*2); cx.fill();
+    // HP bar
+    cx.fillStyle = 'rgba(0,0,0,0.5)';
+    cx.fillRect(a.x - 12, a.y - 18, 24, 3);
+    cx.fillStyle = '#5ad2ff';
+    cx.fillRect(a.x - 12, a.y - 18, 24 * Math.max(0, a.hp / a.maxHp), 3);
+    // Name tag
+    cx.fillStyle = '#5ad2ff';
+    cx.font = 'bold 9px sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText('CONTACT', a.x, a.y - 22);
+    cx.textAlign = 'start';
+  }
+
+  // === Extraction point marker ===
+  if (Game.mission && Game.mission.extractPoint && Game.missionExtractAvailable && Game.missionState && !Game.missionState.extracted) {
+    const ex = Game.mission.extractPoint;
+    const pulse = 0.5 + 0.5 * Math.sin(Game.time * 4);
+    cx.fillStyle = `rgba(90,210,122,${0.16*pulse})`;
+    cx.beginPath(); cx.arc(ex.x, ex.y, 60, 0, Math.PI*2); cx.fill();
+    cx.strokeStyle = '#5ad27a';
+    cx.lineWidth = 2.5;
+    cx.beginPath(); cx.arc(ex.x, ex.y, 36, 0, Math.PI*2); cx.stroke();
+    cx.lineWidth = 1;
+    cx.fillStyle = '#5ad27a';
+    cx.font = 'bold 11px sans-serif';
+    cx.textAlign = 'center';
+    cx.fillText('EXTRACT', ex.x, ex.y - 44);
+    cx.textAlign = 'start';
   }
 
   // === Fire patches (Molotov damage zones) ===
@@ -5047,9 +6302,67 @@ function render() {
     }
   }
 
+  // === Kiosks (bounty board, trainer, property doors) — visible markers ===
+  if (Game.kiosks) {
+    for (const k of Game.kiosks) {
+      if (!inView(k.x - 60, k.y - 60, 120, 120)) continue;
+      // Skip Big Job kiosk if story not done
+      if (k.type === 'bigjob' && Save.completed.length < 10) continue;
+      const pulse = 0.55 + 0.45 * Math.sin(Game.time * 3 + (k.x | 0));
+      // Ground halo
+      cx.fillStyle = k.color + (Math.round(0.18 * pulse * 255).toString(16).padStart(2,'0'));
+      cx.beginPath(); cx.ellipse(k.x, k.y, 30, 16, 0, 0, Math.PI*2); cx.fill();
+      // Marker post
+      cx.strokeStyle = k.color; cx.lineWidth = 2.5;
+      cx.beginPath(); cx.moveTo(k.x, k.y); cx.lineTo(k.x + 4, k.y - 28); cx.stroke();
+      cx.lineWidth = 1;
+      // Top flag
+      cx.fillStyle = k.color;
+      cx.fillRect(k.x + 4, k.y - 28, 16, 8);
+      // Label text under the marker
+      cx.fillStyle = '#0a0d13';
+      cx.fillRect(k.x - 36, k.y + 8, 72, 12);
+      cx.fillStyle = k.color;
+      cx.font = 'bold 9px sans-serif';
+      cx.textAlign = 'center';
+      cx.fillText(k.label, k.x, k.y + 17);
+      cx.textAlign = 'start';
+    }
+  }
+  // === Bounty waypoint marker ===
+  if (Game.activeBounty) {
+    const wp = Game.activeBounty.waypoint;
+    const pulse = 0.6 + 0.4 * Math.sin(Game.time * 4);
+    cx.strokeStyle = `rgba(90,210,122,${pulse})`;
+    cx.lineWidth = 3;
+    cx.beginPath(); cx.arc(wp.x, wp.y, 50, 0, Math.PI*2); cx.stroke();
+    cx.fillStyle = `rgba(90,210,122,${0.08 * pulse})`;
+    cx.beginPath(); cx.arc(wp.x, wp.y, 50, 0, Math.PI*2); cx.fill();
+    cx.lineWidth = 1;
+  }
+  // === Big Job pickups ===
+  if (Game.bigJob && Game.bigJob.phase === 1) {
+    for (const pk of Game.bigJob.pickups) {
+      if (pk.collected) continue;
+      const pulse = 0.5 + 0.5 * Math.sin(Game.time * 5);
+      cx.fillStyle = `rgba(255,176,0,${0.25 * pulse})`;
+      cx.beginPath(); cx.arc(pk.x, pk.y, 30, 0, Math.PI*2); cx.fill();
+      cx.fillStyle = '#ffd070';
+      cx.fillRect(pk.x - 8, pk.y - 8, 16, 16);
+      cx.fillStyle = '#1a1306';
+      cx.font = 'bold 10px sans-serif'; cx.textAlign = 'center';
+      cx.fillText('!', pk.x, pk.y + 3);
+      cx.textAlign = 'start';
+    }
+  }
+
   // === Waypoint pillar — a pulsing gold marker at the mission objective ===
+  // Once extraction becomes available, retarget the pillar to the extract point
+  // so the player isn't drawn back to the now-useless original waypoint.
   if (Game.mission && Game.mission.waypoint) {
-    const wp = Game.mission.waypoint;
+    const wp = (Game.missionExtractAvailable && Game.mission.extractPoint && Game.missionState && !Game.missionState.extracted)
+      ? Game.mission.extractPoint
+      : Game.mission.waypoint;
     const pulse = 0.7 + 0.3 * Math.sin(Game.time * 3);
     // Ground ring (visible on the floor)
     cx.fillStyle = `rgba(255,176,0,${0.18 * pulse})`;
@@ -5288,6 +6601,19 @@ function drawGunSprite(kind, ext) {
     }
     // grip
     cx.fillStyle = '#1a1a1a'; cx.fillRect(ext-2, 0, 2.5, 3);
+  } else if (kind === 'rpg') {
+    // Tube body, slightly fatter than gatling
+    cx.fillStyle = '#3a3a3a'; roundRect2(ext-2, -3, 18, 6, 1.5); cx.fill();
+    cx.fillStyle = '#5a5a5a'; cx.fillRect(ext, -2.2, 14, 4.4);
+    // Iron sights on top
+    cx.fillStyle = '#1a1a1a';
+    cx.fillRect(ext+2,  -3.6, 2, 1.2);
+    cx.fillRect(ext+12, -3.6, 2, 1.2);
+    // Grip underneath
+    cx.fillStyle = '#1a1a1a'; cx.fillRect(ext, 0, 2, 3.5);
+    // Orange warhead nose
+    cx.fillStyle = '#ff8030'; cx.fillRect(ext+16, -1.8, 3, 3.6);
+    cx.fillStyle = '#ffd070'; cx.fillRect(ext+16, -0.6, 3, 1.2);
   } else if (kind === 'laser') {
     // body
     cx.fillStyle = '#3a2a4a'; roundRect2(ext-1, -3.6, 14, 7.2, 1.5); cx.fill();
@@ -5767,7 +7093,31 @@ function updateHUD() {
   const ch = Characters.find(c => c.id === p.character) || Characters[0];
   $('hud-character').textContent = ch.name;
   $('hud-character').style.color = ch.color;
-  if (Game.mission) {
+  // Bounty / Big Job take priority on the HUD line over free-roam hint, but
+  // a real mission outranks them all.
+  if (Game.bigJob) {
+    const bj = Game.bigJob;
+    $('hud-mission').textContent = `★ THE BIG JOB — Phase ${bj.phase === 'done' ? '3' : bj.phase}`;
+    if (bj.phase === 1) {
+      const done = bj.pickups.filter(p => p.collected).length;
+      $('hud-objective').textContent = `Collect 3 evidence drops (${done}/3)`;
+    } else if (bj.phase === 2) {
+      $('hud-objective').textContent = `Defend the bank — ${Math.ceil(bj.timer)}s`;
+    } else if (bj.phase === 3) {
+      $('hud-objective').textContent = `Escape to the airport — ${Math.round(Math.hypot(bj.airportPos.x - Game.player.x, bj.airportPos.y - Game.player.y))}m`;
+    }
+  } else if (Game.activeBounty) {
+    const ab = Game.activeBounty;
+    $('hud-mission').textContent = `🎯 BOUNTY: ${ab.title}`;
+    let prog = `Reward: $${ab.reward.toLocaleString()}`;
+    if (ab.type === 'holdout' || ab.type === 'time_trial')
+      prog += ` • ${Math.ceil(ab.timeRemaining)}s left`;
+    else if (ab.type === 'rampage')
+      prog += ` • kills ${ab.kills}/${ab.need} • ${Math.ceil(ab.timeRemaining)}s`;
+    else
+      prog += ` • ${Math.round(Math.hypot(ab.waypoint.x - Game.player.x, ab.waypoint.y - Game.player.y))}m to target`;
+    $('hud-objective').textContent = prog;
+  } else if (Game.mission) {
     $('hud-mission').textContent = `MISSION ${Game.mission.id}: ${Game.mission.title.toUpperCase()}`;
     const m = Game.mission, st = Game.missionState;
     let prog = m.obj;
@@ -5778,7 +7128,15 @@ function updateHUD() {
     if (m.defend) prog += ` • ${Math.floor(st.defendTime||0)}/${m.defend}s`;
     if (m.requireCharges) prog += ` • charges ${st.charges||0}/${m.requireCharges}`;
     if (m.requireTerminals) prog += ` • terminals ${st.terminals||0}/${m.requireTerminals}`;
-    if (m.waypoint) {
+    if (m.requireBags) prog += ` • bags ${st.bagsCollected||0}/${m.requireBags}`;
+    if (m.stealthLimit) prog += ` • alarms ${st.alarmsRaised||0}/${m.stealthLimit}`;
+    if (m.rescueAlly) prog += st.allyAlive ? ` • contact: ALIVE` : ` • contact: DOWN`;
+    if (m.phaseBoss) prog += ` • boss phase ${st.bossPhase||1}/3`;
+    if (Game.missionExtractAvailable && m.extractPoint && !st.extracted) {
+      const ex = m.extractPoint;
+      const d = Math.round(Math.hypot(ex.x - Game.player.x, ex.y - Game.player.y));
+      prog += `  •  ⮕ EXTRACT ${d}m`;
+    } else if (m.waypoint) {
       const d = Math.round(Math.hypot(m.waypoint.x - Game.player.x, m.waypoint.y - Game.player.y));
       const label = m.waypointLabel || 'objective';
       prog += `  •  ${d}m to ${label}`;
@@ -5793,9 +7151,39 @@ function updateHUD() {
 $('pause-missions').addEventListener('click', () => { closeOverlay('ov-pause'); openMissionsList(); });
 $('pause-settings').addEventListener('click', () => { closeOverlay('ov-pause'); openOverlay('ov-settings'); });
 $('pause-multiplayer').addEventListener('click', () => { closeOverlay('ov-pause'); openMultiplayer(); });
+$('pause-stats').addEventListener('click', () => { closeOverlay('ov-pause'); openStats(); });
+
+function openStats() {
+  const s = Save.stats || {};
+  const acvDoneIds = Save.achievements || [];
+  let html = `
+    <div style="color: var(--muted); font-size: 11px; letter-spacing: 2px; margin-bottom: 6px;">LIFETIME STATS</div>
+    <div class="row"><span>Total kills</span><b style="color:var(--accent)">${(s.totalKills||0).toLocaleString()}</b></div>
+    <div class="row"><span>Total deaths</span><b>${(s.totalDeaths||0).toLocaleString()}</b></div>
+    <div class="row"><span>Distance driven</span><b>${(s.distanceDriven||0).toLocaleString()} u</b></div>
+    <div class="row"><span>Money earned (lifetime)</span><b style="color:#5ad27a">$${(s.moneyEarned||0).toLocaleString()}</b></div>
+    <div class="row"><span>Money spent</span><b>$${(s.moneySpent||0).toLocaleString()}</b></div>
+    <div class="row"><span>Missions completed</span><b>${Save.completed.length} / 10</b></div>
+    <div class="row"><span>Bounties completed</span><b>${s.bountiesCompleted||0}</b></div>
+    <div class="row"><span>Vehicles stolen</span><b>${s.vehiclesStolen||0}</b></div>
+    <div class="row"><span>Big Jobs completed</span><b>${Save.bigJobsDone||0}</b></div>
+    <div style="color: var(--muted); font-size: 11px; letter-spacing: 2px; margin: 18px 0 6px;">ACHIEVEMENTS (${acvDoneIds.length} / ${Object.keys(Achievements).length})</div>
+  `;
+  for (const id of Object.keys(Achievements)) {
+    const done = acvDoneIds.includes(id);
+    html += `<div class="row" style="opacity:${done?1:0.4}"><span>${done ? '🏆' : '🔒'} <b>${Achievements[id].name}</b><br/><span style="color:var(--muted); font-size:11px;">${Achievements[id].desc}</span></span><span style="color:${done?'var(--good)':'var(--muted)'}; font-size: 11px;">${done?'UNLOCKED':'locked'}</span></div>`;
+  }
+  $('stats-body').innerHTML = html;
+  openOverlay('ov-stats');
+}
 $('pause-quit').addEventListener('click', () => {
   closeOverlay('ov-pause');
   Game.running = false;
+  // Wipe lingering mission/chase state so the next game starts clean.
+  cleanupMissionState();
+  // Tear down the multiplayer session entirely so we don't leak the
+  // BroadcastChannel + position broadcast interval behind us.
+  if (MP.channel) mpDisconnect();
   showScreen('title');
   refreshTitle();
 });
@@ -6423,6 +7811,17 @@ $('le-playtest').addEventListener('click', () => {
   if (LE.autosaveTimer) { clearInterval(LE.autosaveTimer); LE.autosaveTimer = null; }
   toast('Playtesting your level…');
   Game.player = newPlayer();
+  // Clean every piece of state that could leak in from a prior real game.
+  Game.mission = null;
+  Game.missionState = null;
+  Game.missionObjects = [];
+  Game.missionAlly = null;
+  Game.missionFailed = false;
+  Game.missionExtractAvailable = false;
+  Game.chaseVehicles = [];
+  Game.wanted = 0;
+  Game.maxHeat = false;
+  Game._wasInBase = false;
   if (!Tex.asphalt) buildTextures();
   generateWorld();
   applyCustomLevel(LE.level);
